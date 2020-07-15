@@ -1,0 +1,38 @@
+# Node
+npm-debug.log
+node_modules/
+
+# Mac
+.DS_Store
+*.DS_Store
+.apdisk
+.AppleDB
+.AppleDesktop
+.AppleDouble
+.directory
+
+# Windows
+Thumbs.db
+$RECYCLE.BIN/
+*.cab
+*.iml
+*.lnk
+*.msi
+*.msm
+*.msp
+._*
+
+
+# Idea 
+.idea/
+
+# vi
+*~
+
+# Php - Composer
+vendor/
+
+# General
+log/
+*.log
+scratch/
