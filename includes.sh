@@ -7,12 +7,14 @@
 [ -f ~/.bash/js.sh ] && source ~/.bash/js.sh || true
 [ -f ~/.bash/virtualize.sh ] && source ~/.bash/virtualize.sh || true
 [ -f ~/.bash/apps.sh ] && source ~/.bash/apps.sh || true
+[ -f ~/.bash/scm.sh ] && source ~/.bash/scm.sh || true
 
 export CLICOLOR=1
 export LSCOLORS=GxFxCxDxBxegedabagaced
 export HISTTIMEFORMAT='%F %T '
 
-# align to linux and connect as postgres by defualt
+# align to linux and connect as postgres by default
+export PGHOST=localhost
 export PGUSER=postgres
 export PGDATABASE=postgres
 export PGVERSION=9.5 # this is not a standard PG ENV VAR
