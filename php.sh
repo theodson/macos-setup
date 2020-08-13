@@ -152,7 +152,7 @@ function brew_php_install() {
     imagick_test /private/tmp/imagick_test.php${phpver}.png && echo "imagick correctly installed - see /private/tmp/imagick_test.php${phpver}.png" || echo 'imagick issue exists'
 
     latest_php='7.4'
-    for phpver in 7.2 7.4
+    for phpver in $phpversions
     do
         brew switch icu4c 67.1
         # brew switch openssl 1.1.0 ?? not sure if this can be done/needed.

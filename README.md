@@ -19,6 +19,7 @@ Example `~/.bash_profile`
 
 ```
 #!/usr/bin/env bash
+export phpversions="7.2 7.4"
 
 # Read ~/.profile as ~/.bash_profile makes ~/.profile obsolete and ignores it
 source ~/.credentials
@@ -219,6 +220,8 @@ brew switch openssl 1.0.2t
 
 # icu4 changed from 64 to 67 in 10.5.5 - fix that
 # https://gist.github.com/berkedel/d1fc6d13651c16002f64653096d1fded
+# brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/c179a064276d698d66953898ff9e02d6e0664b2a/Formula/icu4c.rb
+# brew switch icu4c 62.1
 brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/a806a621ed3722fb580a58000fb274a2f2d86a6d/Formula/icu4c.rb
 brew switch icu4c 64.2
 
@@ -239,8 +242,10 @@ pecl list -a | egrep 'redis|imagick|apcu|xdebug|memcached'
 alias sphp70='brew switch icu4c 64.2;switch-php -v 7.0'
 echo "alias sphp70='brew switch icu4c 64.2;brew switch openssl 1.0.2t;switch-php -v 7.0'" >> ~/.bash/adhoc.sh
 
+export phpversions="7.2 7.4"
+
 latest_php='7.4'
-for version in 7.2 7.4
+for version in $phpversions
 do
   brew switch icu4c 67.1
   # brew switch openssl 1.1.0
