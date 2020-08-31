@@ -110,6 +110,7 @@ function brew_php_install() {
 
     cgr laravel/valet
     valet install  --no-interaction -vvv
+    valet trust
     brew services list
 
     # tap required repos for php70 and extensions
@@ -230,11 +231,12 @@ function valet_uninstall() {
         done
     done
 
-
     [ -e  ~/.valet ]  && sudo rm -r ~/.valet
 
     brew cleanup
     rm -rf /usr/local/etc/php/* /private/tmp/pear/* /usr/local/lib/php/* /usr/local/share/php* /usr/local/share/pear*
+    # todo - consider tidying /Library/LaunchDaemons/homebrew.mxcl*.plist
+    # todo - consider tidying ~/Library/LaunchAgents/homebrew.mxcl*.plist
 
     echo "recommend re-installing php versions"
 }
@@ -253,5 +255,7 @@ function composer_global_install() {
     cgr update laravel/installer &>/dev/null || cgr laravel/installer
     cgr update laravel/valet &>/dev/null || cgr laravel/valet
     cgr update deployer/deployer &>/dev/null || cgr deployer/deployer
+    # php 7.2+ only
+    # cgr update tightenco/takeout &>/dev/null || cgr tightenco/takeout
 
 }
