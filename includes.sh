@@ -18,9 +18,7 @@ export PGHOST=localhost
 export PGUSER=postgres
 export PGDATABASE=postgres
 export PGVERSION=9.5 # this is not a standard PG ENV VAR
-[ -e /usr/local/opt/postgresql${PGVERSION} ] && export PATH="/usr/local/opt/postgresql${PGVERSION}/bin:$PATH"
-[ -e /usr/local/opt/postgresql${PGVERSION} ] && export LDFLAGS="-L/usr/local/opt/postgresql${PGVERSION}/lib"
-[ -e /usr/local/opt/postgresql${PGVERSION} ] && export CPPFLAGS="-I/usr/local/opt/postgresql${PGVERSION}/include"
-
-export PATH="/usr/local/opt/postgresql@$PGVERSION/bin:${PATH}"
+[ -e /usr/local/opt/postgresql@${PGVERSION} ] && export PATH="/usr/local/opt/postgresql@${PGVERSION}/bin:$PATH"
+[ -e /usr/local/opt/postgresql@${PGVERSION} ] && export LDFLAGS="-L/usr/local/opt/postgresql@${PGVERSION}/lib"
+[ -e /usr/local/opt/postgresql@${PGVERSION} ] && export CPPFLAGS="-I/usr/local/opt/postgresql@${PGVERSION}/include"
 
