@@ -8,7 +8,7 @@ alias ng='npm list -g --depth=0'
 alias nl='npm list --depth=0'
 
 # yarn 
-export PATH="$PATH:$HOME/.yarn/bin"
+export PATH="$HOME/.yarn/bin:$PATH"
 
 # nvm - node version manager
 export NVM_DIR="$HOME/.nvm"
