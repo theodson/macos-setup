@@ -10,10 +10,21 @@ function composer_global_check_installation() {
     done
 }
 
+# helpers for ongoing issue switching to php7.0
+alias switch_openssl1_0='brew switch openssl@1.0 1.0.2t && ln -snf /usr/local/Cellar/openssl@1.0/1.0.2t /usr/local/opt/openssl'
+alias switch_openssl1_1='brew switch openssl@1.1 1.1.1g && ln -snf /usr/local/Cellar/openssl@1.1/1.1.1g /usr/local/opt/openssl'
+alias switch_icu4c64_2='brew switch icu4c@64.2 64.2 && ln -snf /usr/local/Cellar/icu4c@64.2/64.2 /usr/local/opt/icu4c' # php@7.0 need it
+alias switch_icu4c67_1='brew switch icu4c 67.1 && ln -snf /usr/local/Cellar/icu4c/67.1 /usr/local/opt/icu4c'
 
+
+# these alias worked prior to 2020-09-09
 alias sphp70='brew switch icu4c 64.2;brew switch openssl 1.0.2t;switch-php -v 7.0'
 alias sphp72='brew switch icu4c 67.1;switch-php -v 7.2'
 alias sphp74='brew switch icu4c 67.1;switch-php -v 7.4'
+# new sphp as of 2020-09-09
+alias sphp70='switch_icu4c64_2 && switch_openssl1_0 && switch-php -v 7.0'
+alias sphp72='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 7.2'
+alias sphp74='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 7.4'
 
 alias php-versions='brew ls --versions php@5{0..7} php@7.{0..5} php@8.{0..5}'
 
@@ -101,35 +112,58 @@ function brew_php_install() {
     # `2020-06 Catalina 10.5.5`
     # https://getgrav.org/blog/macos-catalina-apache-multiple-php-versions
 
-    # prepare for install
-    brew reinstall zlib libmemcached openldap libiconv jq pkg-config
-
-    # install the latest switch-php
-    type -p nvm &>/dev/null && nvm use default && npm install --global https://github.com/bgdevlab/switch-php#bgdevlab
-    type -p nvm &>/dev/null && nvm use stable && npm install --global https://github.com/bgdevlab/switch-php#bgdevlab
-
-    cgr laravel/valet
-    valet install  --no-interaction -vvv
-    valet trust
-    brew services list
+    # On the first install we need to be based on php70 for composer global installs
 
     # tap required repos for php70 and extensions
     brew tap bgdevlab/php-ext # we need php70 imap
     brew tap bgdevlab/homebrew-deprecated # php-70
 
     # php70 requires openssl-1.0.0
-    brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/8b9d6d688f483a0f33fcfc93d433de501b9c3513/Formula/openssl.rb
-    brew switch openssl 1.0.2t # brew cleanup may remove this
+    # brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/8b9d6d688f483a0f33fcfc93d433de501b9c3513/Formula/openssl.rb # cant do it this way anymore 20200910
+    # brew switch openssl 1.0.2t # brew cleanup may remove this
+
+    # idea-1: brew tap bgdevlab/homebrew-deprecated && pushd $(brew --repo bgdevlab/deprecated) git checkout develop # this branch has openssl@1.0
+    # brew extract recommended as brew reinstall from github URL not supported anymore 20200910
+    brew extract --version 1.0 -v -d --force openssl bgdevlab/deprecated && HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew reinstall openssl@1.0
 
     # php70 requires icu4 64 - it changed from 64 to 67 in 10.5.5 - fix that
     # https://gist.github.com/berkedel/d1fc6d13651c16002f64653096d1fded
-    brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/a806a621ed3722fb580a58000fb274a2f2d86a6d/Formula/icu4c.rb
-    brew switch icu4c 64.2 # brew cleanup may remove this
+    # brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/a806a621ed3722fb580a58000fb274a2f2d86a6d/Formula/icu4c.rb # cant do it this way anymore 20200910
+    brew extract --version 64.2 -v -d --force icu4c bgdevlab/deprecated && HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew reinstall icu4c@64.2
+
+    switch_icu4c64_2 # brew cleanup may remove this
+
+    # prepare for install
+    brew reinstall zlib libmemcached openldap libiconv jq pkg-config
+    HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew reinstall php@7.0 php@7.0-imap imagemagick
+
+    # install the latest switch-php
+    type -p nvm &>/dev/null && nvm use default && npm install --global https://github.com/bgdevlab/switch-php#bgdevlab
+    type -p nvm &>/dev/null && nvm use stable && npm install --global https://github.com/bgdevlab/switch-php#bgdevlab
+
+
+    # switch_openssl1_0 && switch_icu4c64_2 && echo "prepared for php@7.0" && switch-php 7.0
+    sphp70
+
+    # ensure composer packages are ready
+    type -p composer &>/dev/null || brew install composer
+
+    composer global show -q hirak/prestissimo &>/dev/null || composer global require hirak/prestissimo -vvv
+    composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
+
+    # this we need to install php7.0 first on a new box!
+    cgr laravel/valet
+    valet install  --no-interaction -vvv
+    valet trust
+    brew services list
 
     sudo rm -rf /private/tmp/pear/
 
     phpver=7.0
-    brew reinstall php@7.0 php@7.0-imap imagemagick
+    # brew reinstall php@7.0 php@7.0-imap imagemagick
+    # switch_openssl1_0 && switch_icu4c64_2 && echo "prepared for php@7.0" && switch-php 7.0
+    sphp70
+
     switch-php $phpver
     # ensure /usr/local/bin is before /usr/bin if you want to favour brew's bins
 
@@ -155,11 +189,11 @@ function brew_php_install() {
     latest_php='7.4'
     for phpver in $phpversions
     do
-        brew switch icu4c 67.1
+        switch_icu4c67_1
         # brew switch openssl 1.1.0 ?? not sure if this can be done/needed.
 
         # this install php@$version also
-        brew reinstall php@$phpver imagemagick
+        HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew reinstall php@$phpver imagemagick
 
         # php-imap
         [ $phpver == $latest_php ] && brew install php-imap || brew install php@${phpver}-imap
@@ -243,11 +277,11 @@ function valet_uninstall() {
 
 function composer_global_install() {
 
-    brew install composer || brew upgrade composer
-    composer global require hirak/prestissimo -vvv
-    composer global require consolidation/cgr -vvv
+    type -p composer &>/dev/null || brew install composer
+    composer global show -q hirak/prestissimo &>/dev/null || composer global require hirak/prestissimo -vvv
+    composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
 
-    switch-php 7.0
+    sphp70
     # use php70 as base dependency for these tools.
     # if using later versions of php when installing via composer/cgr then dependencies are matched there, hence when
     # switching back to lower version of php we encounter vender package issues.
@@ -255,6 +289,7 @@ function composer_global_install() {
     cgr update laravel/installer &>/dev/null || cgr laravel/installer
     cgr update laravel/valet &>/dev/null || cgr laravel/valet
     cgr update deployer/deployer &>/dev/null || cgr deployer/deployer
+
     # php 7.2+ only
     # cgr update tightenco/takeout &>/dev/null || cgr tightenco/takeout
 
