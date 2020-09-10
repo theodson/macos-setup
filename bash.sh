@@ -33,6 +33,7 @@ alias ll='ls -lGfha'
 
 alias prettyjson='python -m json.tool'
 alias nospace='egrep -v "^#|^[[:space:]]*$"'
+alias no_commments_space='egrep -v "^;|^#|^[[:space:]]*$"'
 
 alias ejectdisc='drutil tray eject'
 
@@ -157,7 +158,7 @@ function ssh_prepare_keyexchange() {
 
 # macOs - check for expected brew installs
 function brew_check_installation() {
-    for formula in httpie wget gettext htop bash-completion zlib jq pkg-config
+    for formula in httpie wget gettext htop bash-completion zlib jq pkg-config tree
     do
         if [ "" = "`brew ls --versions $forumla`" ]; then
             echo "install brew install $forumla"
