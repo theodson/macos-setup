@@ -3,7 +3,7 @@
 # #########################################################
 #    Version Control 
 
-# Source Control Git 
+# Source Control Git
 alias git_tree='git log --branches --remotes --tags --graph --pretty=format:"%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset" --abbrev-commit --date=relative'
 alias git_local_only_branches='git branch -vv | cut -c 3- | awk '"'"'$3 !~/\[/ { print $1 }'"'"'| sort -f' # Show Local Only Branches (those that dont exist in origin/remote)
 alias git_tag_history='~/bin/tag_history.sh' # generate git tag history
@@ -13,6 +13,10 @@ alias nah='try nope - nah is too dangerous'
 
 # Recover with git reflog - Reset to last commit and remove untracked files and directories.
 alias nope='git reset --hard'
+
+# git alias
+git config --global alias.logline "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+git config --global alias.credentials.helper "config --get-all --show-origin credential.helper"
 
 # debug git
 alias git_debug="GIT_TRACE=true \
