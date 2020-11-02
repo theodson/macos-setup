@@ -36,3 +36,6 @@ vendor/
 log/
 *.log
 scratch/
+
+# laravel 
+/tailwind.config_full.js
