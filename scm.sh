@@ -6,6 +6,7 @@
 # Source Control Git
 alias git_tree='git log --branches --remotes --tags --graph --pretty=format:"%Cred%h%Creset -%C(auto)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset" --abbrev-commit --date=relative'
 alias git_local_only_branches='git branch -vv | cut -c 3- | awk '"'"'$3 !~/\[/ { print $1 }'"'"'| sort -f' # Show Local Only Branches (those that dont exist in origin/remote)
+alias git_credentials_show='echo -e "\n# git credentials (helper)";git credentials.helper;echo -e "\n# git credentials (global)";git credentials.global;echo -e "\n# git credentials (local)";git credentials.local'
 
 # alias nah='git reset --hard; git clean -df' # Gone forever - Reset to last commit and remove untracked files and directories.
 alias nah='try nope - nah is too dangerous'
@@ -16,6 +17,8 @@ alias nope='git reset --hard'
 # git alias
 git config --global alias.logline "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
 git config --global alias.credentials.helper "config --get-all --show-origin credential.helper"
+git config --global alias.credentials.local "config --show-origin --local --get-regexp user.*"
+git config --global alias.credentials.global "config --show-origin --global --get-regexp user.*"
 
 # debug git
 alias git_debug="GIT_TRACE=true \
