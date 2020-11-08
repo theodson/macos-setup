@@ -103,6 +103,12 @@ function op {
   fi
 }
 
+# #########################################################
+# Allow "tr" to process non-utf8 byte sequences, read random bytes and keep only alphanumerics
+function genRandom() {
+  length=${1:-32}
+  LC_CTYPE=C tr -dc A-Za-z0-9 < /dev/urandom | head -c$length
+}
 
 # #########################################################
 #   SSH keys
