@@ -32,6 +32,10 @@ GIT_TRACE_SETUP=true \
 GIT_TRACE_SHALLOW=true \
 git $@"
 
+# Git Credentials - Useful Articles for macOs
+# https://coolaj86.com/articles/vanilla-devops-git-credentials-cheatsheet/
+# https://git-scm.com/book/en/v2/Git-Tools-Credential-Storage
+# https://www.shellhacks.com/git-config-username-password-store-credentials/
 
 function init_global_gitignore() {
     # ensure the default ignores are in place - no need to add these to each project's .gitignore
