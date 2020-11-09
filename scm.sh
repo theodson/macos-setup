@@ -36,6 +36,8 @@ git $@"
 # https://coolaj86.com/articles/vanilla-devops-git-credentials-cheatsheet/
 # https://git-scm.com/book/en/v2/Git-Tools-Credential-Storage
 # https://www.shellhacks.com/git-config-username-password-store-credentials/
+#
+# https://opensource.apple.com/source/Git/Git-33/src/git/contrib/credential/osxkeychain/git-credential-osxkeychain.c.auto.html
 
 function init_global_gitignore() {
     # ensure the default ignores are in place - no need to add these to each project's .gitignore
@@ -43,6 +45,11 @@ function init_global_gitignore() {
 }
 init_global_gitignore
 
+function git_add_to_osxkeychain() {
+    # https://opensource.apple.com/source/Git/Git-33/src/git/contrib/credential/osxkeychain/git-credential-osxkeychain.c.auto.html
+    [ $# -lt 3 ] && { echo 'Usage: host username password'; return 1; }
+    printf "protocol=https\nhost=%s\nusername=%s\npassword=%s\n" "$host" "$username" "$credential" | git "credential-osxkeychain" store
+}
 
 # alias git_tag_history='~/bin/tag_history.sh' # generate git tag history
 
