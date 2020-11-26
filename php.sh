@@ -33,6 +33,7 @@ alias artisan='php artisan'
 alias tinker='php artisan tinker'
 
 # PHPDeployer - https://deployer.org
+alias dep='vendor/bin/dep' # no global install - (composer 2 issue) - use project's vendor install.
 alias prov='APP_ENV=deployer dep -f=prov.php' # custom deployer command for provisioning
 
 # PhpUnit
@@ -148,7 +149,8 @@ function brew_php_install() {
     # ensure composer packages are ready
     type -p composer &>/dev/null || brew install composer
 
-    composer global show -q hirak/prestissimo &>/dev/null || composer global require hirak/prestissimo -vvv
+    # plugins are an issue in Composer v2 - prestissimo likely not needed due to perf improvements
+    # composer global show -q hirak/prestissimo &>/dev/null || composer global require hirak/prestissimo -vvv
     composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
 
     # this we need to install php7.0 first on a new box!
@@ -278,7 +280,7 @@ function valet_uninstall() {
 function composer_global_install() {
 
     type -p composer &>/dev/null || brew install composer
-    composer global show -q hirak/prestissimo &>/dev/null || composer global require hirak/prestissimo -vvv
+    # composer global show -q hirak/prestissimo &>/dev/null || composer global require hirak/prestissimo -vvv
     composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
 
     sphp70
@@ -288,7 +290,8 @@ function composer_global_install() {
 
     cgr update laravel/installer &>/dev/null || cgr laravel/installer
     cgr update laravel/valet &>/dev/null || cgr laravel/valet
-    cgr update deployer/deployer &>/dev/null || cgr deployer/deployer
+    # cgr update deployer/deployer &>/dev/null || cgr deployer/deployer
+    alias dep='vendor/bin/dep'
 
     # php 7.2+ only
     # cgr update tightenco/takeout &>/dev/null || cgr tightenco/takeout
