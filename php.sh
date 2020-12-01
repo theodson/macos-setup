@@ -4,7 +4,7 @@
 #    PHP
 
 function composer_global_check_installation() {
-    for dependency in hirak/prestissimo consolidation/cgr deployer/deployer laravel/valet laravel/installer
+    for dependency in consolidation/cgr laravel/valet laravel/installer
     do
         echo "TODO check composer install for $dependency" || true
     done
