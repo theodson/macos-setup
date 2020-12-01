@@ -281,6 +281,7 @@ function composer_global_install() {
 
     type -p composer &>/dev/null || brew install composer
     # composer global show -q hirak/prestissimo &>/dev/null || composer global require hirak/prestissimo -vvv
+    composer global remove hirak/prestissimo || true
     composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
 
     sphp70
@@ -290,7 +291,7 @@ function composer_global_install() {
 
     cgr update laravel/installer &>/dev/null || cgr laravel/installer
     cgr update laravel/valet &>/dev/null || cgr laravel/valet
-    # cgr update deployer/deployer &>/dev/null || cgr deployer/deployer
+    # cgr update deployer/deployer &>/dev/null || cgr deployer/deployer # cgr remove deployer/deployer    
     alias dep='vendor/bin/dep'
 
     # php 7.2+ only
