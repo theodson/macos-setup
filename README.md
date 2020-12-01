@@ -27,10 +27,7 @@ You can manually add `~/.bash/includes.sh` and `~/.bash/adhoc.sh` to your `.bash
 
 ## Quick start templates
 
-A common setup is stored for a quick start they are stored in the `templates` folder
-
-- templates/.bash_profile
-- templates/adhoc.sh
+A common setup for a quick start is found in the `templates` folder, run the following
 
 ```
 # backup 
