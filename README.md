@@ -94,6 +94,13 @@ brew install vagrant-completion
 ```
 
 
+### node + NVM
+
+```
+# js helper script - js.sh
+js_env_install
+```
+
 
 ### composer
 
@@ -156,16 +163,6 @@ brew info postgresql@9.5
 ```
 install_postgres_hashlib
 ```
-
-
-
-### node + NVM
-
-```
-# js helper script - js.sh
-js_env_install
-```
-
 
 
 ### redis
