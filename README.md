@@ -74,10 +74,10 @@ xcode-select --install
 
 
 
-### bash `auto complete`
+### brew / bash utilities 
 
 ```
-`brew_check_installation`
+brew_check_installation
 ```
 
 
