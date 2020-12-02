@@ -119,6 +119,9 @@ function brew_php_install() {
     brew tap bgdevlab/php-ext # we need php70 imap
     brew tap bgdevlab/homebrew-deprecated # php-70
 
+    # note: 2020-12-02 for add icu4c@64.2 and openssl@1.0 for catalina fixes below using the require  `brew extract` process 
+    #  we've added the Formula files for reference and possible use in this script (later) to branch `catalina` at - https://github.com/bgdevlab/homebrew-deprecated/tree/catalina/Formula
+
     # php70 requires openssl-1.0.0
     # brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/8b9d6d688f483a0f33fcfc93d433de501b9c3513/Formula/openssl.rb # cant do it this way anymore 20200910
     # brew switch openssl 1.0.2t # brew cleanup may remove this
