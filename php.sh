@@ -25,6 +25,7 @@ alias sphp74='brew switch icu4c 67.1;switch-php -v 7.4'
 alias sphp70='switch_icu4c64_2 && switch_openssl1_0 && switch-php -v 7.0'
 alias sphp72='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 7.2'
 alias sphp74='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 7.4'
+alias sphp80='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 8.0' # not tested
 
 alias php-versions='brew ls --versions php@5{0..7} php@7.{0..5} php@8.{0..5}'
 
@@ -129,11 +130,15 @@ function brew_php_install() {
     # idea-1: brew tap bgdevlab/homebrew-deprecated && pushd $(brew --repo bgdevlab/deprecated) git checkout develop # this branch has openssl@1.0
     # brew extract recommended as brew reinstall from github URL not supported anymore 20200910
     brew extract --version 1.0 -v -d --force openssl bgdevlab/deprecated && HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew reinstall openssl@1.0
+    echo -e "Are you sure openssl@1.0 has been built. The last step usually takes a few minutes to build from the Formula."
+    read -r -p "Press enter to continue" response
 
     # php70 requires icu4 64 - it changed from 64 to 67 in 10.5.5 - fix that
     # https://gist.github.com/berkedel/d1fc6d13651c16002f64653096d1fded
     # brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/a806a621ed3722fb580a58000fb274a2f2d86a6d/Formula/icu4c.rb # cant do it this way anymore 20200910
     brew extract --version 64.2 -v -d --force icu4c bgdevlab/deprecated && HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew reinstall icu4c@64.2
+    echo -e "Are you sure openssl@1.0 has been built. The last step usually takes a few minutes to build from the Formula."
+    read -r -p "Press enter to continue" response
 
     switch_icu4c64_2 # brew cleanup may remove this
 
@@ -191,7 +196,7 @@ function brew_php_install() {
 
     imagick_test /private/tmp/imagick_test.php${phpver}.png && echo "imagick correctly installed - see /private/tmp/imagick_test.php${phpver}.png" || echo 'imagick issue exists'
 
-    latest_php='7.4'
+    latest_php='8.0'
     for phpver in $phpversions
     do
         switch_icu4c67_1
@@ -286,6 +291,11 @@ function composer_global_install() {
     # composer global show -q hirak/prestissimo &>/dev/null || composer global require hirak/prestissimo -vvv
     composer global remove hirak/prestissimo || true
     composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
+
+    # if they exist as global installs remove them as CGR will install them
+    composer global remove deployer/deployer --ignore-platform-reqs &>/dev/null || true
+    composer global remove laravel/valet --ignore-platform-reqs &>/dev/null || true
+    composer global remove laravel/installer --ignore-platform-reqs &>/dev/null || true
 
     sphp70
     # use php70 as base dependency for these tools.
