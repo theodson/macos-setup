@@ -367,7 +367,8 @@ brew tap bgdevlab/homebrew-deprecated # php-70
 brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/8b9d6d688f483a0f33fcfc93d433de501b9c3513/Formula/openssl.rb
 # fix libcrypto issue dyld: Library not loaded: /usr/local/opt/openssl/lib/libcrypto.1.0.0.dylib
 #brew switch openssl 1.0.2s
-brew switch openssl 1.0.2t
+#brew switch openssl 1.0.2t
+brew link --overwrite -f -q openssl@1.0;ln -snf /usr/local/Cellar/openssl@1.0/1.0.2t /usr/local/opt/openssl
 
 
 # icu4 changed from 64 to 67 in 10.5.5 - fix that
@@ -375,7 +376,8 @@ brew switch openssl 1.0.2t
 # brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/c179a064276d698d66953898ff9e02d6e0664b2a/Formula/icu4c.rb
 # brew switch icu4c 62.1
 brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/a806a621ed3722fb580a58000fb274a2f2d86a6d/Formula/icu4c.rb
-brew switch icu4c 64.2
+#brew switch icu4c 64.2
+brew link --overwrite -f -q icu4c@64.2 64.2;ln -snf /usr/local/Cellar/icu4c@64.2/64.2 /usr/local/opt/icu4c
 
 brew reinstall php@7.0 php@7.0-imap imagemagick
 
@@ -391,15 +393,16 @@ php -m | egrep 'redis|imagick|apcu|xdebug|memcached'
 php-fpm -m | egrep 'redis|imagick|apcu|xdebug|memcached'
 pecl list -a | egrep 'redis|imagick|apcu|xdebug|memcached'
 
-alias sphp70='brew switch icu4c 64.2;switch-php -v 7.0'
-echo "alias sphp70='brew switch icu4c 64.2;brew switch openssl 1.0.2t;switch-php -v 7.0'" >> ~/.bash/adhoc.sh
+alias sphp70='switch_icu4c64_2 && switch_openssl1_0 && switch-php -v 7.0'
+echo "alias sphp70='switch_icu4c64_2 && switch_openssl1_0 && switch-php -v 7.0'" >> ~/.bash/adhoc.sh
 
 export phpversions="7.2 7.4"
 
 latest_php='7.4'
 for version in $phpversions
 do
-  brew switch icu4c 67.1
+  #brew switch icu4c 67.1
+  brew link --overwrite -f -q icu4c 67.1;ln -snf /usr/local/Cellar/icu4c/67.1 /usr/local/opt/icu4c
   # brew switch openssl 1.1.0
     
   # this install php@$version also
@@ -424,8 +427,8 @@ do
 
 done
 
-echo "alias sphp72='brew switch icu4c 67.1;switch-php -v 7.2'" >> ~/.bash_profile
-echo "alias sphp74='brew switch icu4c 67.1;switch-php -v 7.4'" >> ~/.bash_profile
+echo "alias sphp72='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 7.2'" >> ~/.bash/adhoc.sh
+echo "alias sphp74='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 7.4'" >> ~/.bash/adhoc.sh
 
 # use php70 as base dependency for these tools.
 # if using later versions of php when installing via composer/cgr then dependencies are matched there, hence when

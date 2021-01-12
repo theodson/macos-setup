@@ -11,21 +11,28 @@ function composer_global_check_installation() {
 }
 
 # helpers for ongoing issue switching to php7.0
-alias switch_openssl1_0='brew switch openssl@1.0 1.0.2t && ln -snf /usr/local/Cellar/openssl@1.0/1.0.2t /usr/local/opt/openssl'
-alias switch_openssl1_1='brew switch openssl@1.1 1.1.1g && ln -snf /usr/local/Cellar/openssl@1.1/1.1.1g /usr/local/opt/openssl'
-alias switch_icu4c64_2='brew switch icu4c@64.2 64.2 && ln -snf /usr/local/Cellar/icu4c@64.2/64.2 /usr/local/opt/icu4c' # php@7.0 need it
-alias switch_icu4c67_1='brew switch icu4c 67.1 && ln -snf /usr/local/Cellar/icu4c/67.1 /usr/local/opt/icu4c'
+#alias switch_openssl1_0='brew switch openssl@1.0 1.0.2t && ln -snf /usr/local/Cellar/openssl@1.0/1.0.2t /usr/local/opt/openssl'
+#alias switch_openssl1_1='brew switch openssl@1.1 1.1.1g && ln -snf /usr/local/Cellar/openssl@1.1/1.1.1g /usr/local/opt/openssl'
+#alias switch_icu4c64_2='brew switch icu4c@64.2 64.2 && ln -snf /usr/local/Cellar/icu4c@64.2/64.2 /usr/local/opt/icu4c' # php@7.0 need it
+#alias switch_icu4c67_1='brew switch icu4c 67.1 && ln -snf /usr/local/Cellar/icu4c/67.1 /usr/local/opt/icu4c'
 
+# new helpers for macos 11 bigsur - as of 2021-01-13 - due to deprecation of `brew switch` - https://github.com/Homebrew/discussions/discussions/339#discussioncomment-233870
+alias switch_openssl1_0='brew link --overwrite -f -q openssl@1.0 2>&1| grep "Warning:";ln -snf /usr/local/Cellar/openssl@1.0/1.0.2t /usr/local/opt/openssl && echo "forced link openssl@1.0/1.0.2t to /usr/local/opt/openssl"'
+alias switch_openssl1_1='brew link --overwrite -f -q openssl@1.1 2>&1 | grep "Warning:";ln -snf /usr/local/Cellar/openssl@1.1/1.1.1g /usr/local/opt/openssl && echo "forced link openssl@1.1/1.1.1g to /usr/local/opt/openssl"'
+alias switch_icu4c64_2='brew link --overwrite -f -q icu4c@64.2 2>&1 | grep "Warning:";ln -snf /usr/local/Cellar/icu4c@64.2/64.2 /usr/local/opt/icu4c && echo "forced link icu4c@64.2/64.2 to /usr/local/opt/icu4c"' # php@7.0 need it
+alias switch_icu4c67_1='brew link --overwrite -f -q icu4c 2>&1 | grep "Warning:";ln -snf /usr/local/Cellar/icu4c/67.1 /usr/local/opt/icu4c && echo "forced link icu4c/67.1 to /usr/local/opt/icu4c"'
 
 # these alias worked prior to 2020-09-09
-alias sphp70='brew switch icu4c 64.2;brew switch openssl 1.0.2t;switch-php -v 7.0'
-alias sphp72='brew switch icu4c 67.1;switch-php -v 7.2'
-alias sphp74='brew switch icu4c 67.1;switch-php -v 7.4'
+#alias sphp70='brew switch icu4c 64.2;brew switch openssl 1.0.2t;switch-php -v 7.0'
+#alias sphp72='brew switch icu4c 67.1;switch-php -v 7.2'
+#alias sphp74='brew switch icu4c 67.1;switch-php -v 7.4'
+
 # new sphp as of 2020-09-09
 alias sphp70='switch_icu4c64_2 && switch_openssl1_0 && switch-php -v 7.0'
 alias sphp72='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 7.2'
 alias sphp74='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 7.4'
 alias sphp80='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 8.0' # not tested
+
 
 alias php-versions='brew ls --versions php@5{0..7} php@7.{0..5} php@8.{0..5}'
 
@@ -119,6 +126,8 @@ function brew_php_install() {
     # tap required repos for php70 and extensions
     brew tap bgdevlab/php-ext # we need php70 imap
     brew tap bgdevlab/homebrew-deprecated # php-70
+
+    # 2021-01-13 - POSSIBLE future usage - TODO Investigate - https://github.com/shivammathur/homebrew-php
 
     # note: 2020-12-02 for add icu4c@64.2 and openssl@1.0 for catalina fixes below using the require  `brew extract` process 
     #  we've added the Formula files for reference and possible use in this script (later) to branch `catalina` at - https://github.com/bgdevlab/homebrew-deprecated/tree/catalina/Formula
