@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export phpversions="7.2 7.4"
+export phpversions="7.2 7.4 8.0"
 
 # Read ~/.profile as ~/.bash_profile makes ~/.profile obsolete and ignores it
 [ -f ~/.credentials ] && source ~/.credentials

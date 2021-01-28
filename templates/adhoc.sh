@@ -3,7 +3,7 @@
 # Ad Hoc script - not under version control - useful for private settings.
 
 # Overrides Workspace location - used in 'op' command
-export WORKSPACE=~/Workspace
+export WORKSPACE=$HOME/Workspace
 
 alias vagrant="HOMESTEADVM='centos' vagrant"
 
@@ -22,7 +22,6 @@ function _switch_php_pre_tasks() {
     fi
 
 }
-export -f _switch_php_pre_tasks
 
 function _switch_php_post_tasks() {
     [ $# -lt 1 ] && return 1
@@ -40,4 +39,20 @@ function _switch_php_post_tasks() {
         type -p nvm &>/dev/null && nvm use stable && nvm
     fi
 }
+
+function _switch_php_pre_tasks() {
+    [ $# -lt 1 ] && return 1
+    phpver=$1
+    verbose="${2:-0}"
+    [ "${verbose}" -eq 1 ] && echo " 🍾 no hacks required for ${phpver}, thankfully relying on brew tap shivammathur/php and shivammathur/extensions";
+}
+
+function _switch_php_post_tasks() {
+    [ $# -lt 1 ] && return 1
+    phpver=$1
+    verbose="${2:-0}"
+    [ "${verbose}" -eq 1 ] && echo " 🍾 no hacks required for ${phpver}, thankfully relying on brew tap shivammathur/php and shivammathur/extensions";
+}
+
+#export -f _switch_php_pre_tasks
 export -f _switch_php_post_tasks

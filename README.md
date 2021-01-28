@@ -1,20 +1,15 @@
 # macos-setup
 
-###### Last updated `2020-06`
+###### Last updated `2021-01` for BigSur
 
-Note for my macOs dev environment setup whilst using `java, maven, ant, node, nvm, npm,  php, laravel, composer, docker, vagrant, vmware`. 
+> **Note**: Ensure macOS is on at least `11.1`
+
+
+For my macOs dev environment setup whilst using `java, maven, ant, node, nvm, npm,  php, laravel, composer, docker, vagrant, vmware`. 
 
 This repo contains a variety of shell scripts, some of which contain **helper install** functions to maintain a consistent development environment ( they are not fully tested).
 
-
-
 > **Tip**: Reading through the helper functions is sometimes required as macOs versions change and break these scripts.
-
-> **Note**: Ensure macOS is on at least `10.14.2` , may NOT WORK with BigSur 11.x ?
-
-The old readme notes can be found in `NOTES.md`  
-
-
 
 
 # Install 
@@ -50,7 +45,6 @@ Add `adhoc.sh` can be used for un-versioned / private settings if you like.
 Once cloned into `.bash` follow these common steps to install the required dependencies, some of which may already be installed on your system.
 
 
-
 ### brew
 
 ```
@@ -67,23 +61,17 @@ sudo chown -R $(whoami) /usr/local/var/homebrew/linked
 brew install httpie wget htop bash-completion gettext
 ```
 
-
-
 ### xcode
 
 ```
 xcode-select --install
 ```
 
-
-
 ### brew / bash utilities 
 
 ```
 brew_check_installation
 ```
-
-
 
 ### vagrant
 
@@ -93,14 +81,12 @@ brew cask install vagrant-manager
 brew install vagrant-completion
 ```
 
-
 ### node + NVM
 
 ```
 # js helper script - js.sh
 js_env_install
 ```
-
 
 ### composer
 
@@ -109,42 +95,21 @@ js_env_install
 composer_global_install
 ```
 
-
-
 ### php 
 
-Installing and maintaining multiple versions of php from `7.0`-`7.4` has become a tricky endeavour on macOs, the function `brew_php_install` attempts to address the issues.
+Installing multiple versions of php from `7.0`,`7.2`, `7.4` and `8.0` has become significantly easier on BigSur with the 
+help `shivammathur/php` and `shivammathur/extensions`. 
 
+Three helper functions exist to support installation and re-installation, see `php.sh`.
+
+The reinstall try this
 ```
-# php helper script - php.sh
-brew_php_install
+valet_uninstall
+php_install
+valet_install
 ```
 
-
-
-Note: `valet_uninstall` exists to remove valet completely if it is causing issues.
-
-
-
-
- ##### php-imap has been removed
-
-If you need imap
-
-> Kevin Abel is providing some of the PHP extensions removed from Homebrew/core. You can install the IMAP extension with:
->
-> ```
-> brew tap kabel/php-ext
-> 
-> for version in 7.0 7.1
-> do
-> 	# 7.2
-> 	switch-php -v $version
-> 	brew install php@${version}-imap
-> 
-> done
-> ```
-
+> **Note**: `valet_uninstall` exists to remove valet completely if it is causing issues.
 
 
 ### Postgres 9.5
