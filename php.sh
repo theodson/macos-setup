@@ -2,37 +2,12 @@
 
 # #########################################################
 #    PHP
-
-function composer_global_check_installation() {
-    for dependency in consolidation/cgr laravel/valet laravel/installer
-    do
-        echo "TODO check composer install for $dependency" || true
-    done
-}
-
-# helpers for ongoing issue switching to php7.0
-#alias switch_openssl1_0='brew switch openssl@1.0 1.0.2t && ln -snf /usr/local/Cellar/openssl@1.0/1.0.2t /usr/local/opt/openssl'
-#alias switch_openssl1_1='brew switch openssl@1.1 1.1.1g && ln -snf /usr/local/Cellar/openssl@1.1/1.1.1g /usr/local/opt/openssl'
-#alias switch_icu4c64_2='brew switch icu4c@64.2 64.2 && ln -snf /usr/local/Cellar/icu4c@64.2/64.2 /usr/local/opt/icu4c' # php@7.0 need it
-#alias switch_icu4c67_1='brew switch icu4c 67.1 && ln -snf /usr/local/Cellar/icu4c/67.1 /usr/local/opt/icu4c'
-
-# new helpers for macos 11 bigsur - as of 2021-01-13 - due to deprecation of `brew switch` - https://github.com/Homebrew/discussions/discussions/339#discussioncomment-233870
-alias switch_openssl1_0='brew link --overwrite -f -q openssl@1.0 2>&1| grep "Warning:";ln -snf /usr/local/Cellar/openssl@1.0/1.0.2t /usr/local/opt/openssl && echo "forced link openssl@1.0/1.0.2t to /usr/local/opt/openssl"'
-alias switch_openssl1_1='brew link --overwrite -f -q openssl@1.1 2>&1 | grep "Warning:";ln -snf /usr/local/Cellar/openssl@1.1/1.1.1g /usr/local/opt/openssl && echo "forced link openssl@1.1/1.1.1g to /usr/local/opt/openssl"'
-alias switch_icu4c64_2='brew link --overwrite -f -q icu4c@64.2 2>&1 | grep "Warning:";ln -snf /usr/local/Cellar/icu4c@64.2/64.2 /usr/local/opt/icu4c && echo "forced link icu4c@64.2/64.2 to /usr/local/opt/icu4c"' # php@7.0 need it
-alias switch_icu4c67_1='brew link --overwrite -f -q icu4c 2>&1 | grep "Warning:";ln -snf /usr/local/Cellar/icu4c/67.1 /usr/local/opt/icu4c && echo "forced link icu4c/67.1 to /usr/local/opt/icu4c"'
-
-# these alias worked prior to 2020-09-09
-#alias sphp70='brew switch icu4c 64.2;brew switch openssl 1.0.2t;switch-php -v 7.0'
-#alias sphp72='brew switch icu4c 67.1;switch-php -v 7.2'
-#alias sphp74='brew switch icu4c 67.1;switch-php -v 7.4'
-
-# new sphp as of 2020-09-09
-alias sphp70='switch_icu4c64_2 && switch_openssl1_0 && switch-php -v 7.0'
-alias sphp72='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 7.2'
-alias sphp74='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 7.4'
-alias sphp80='switch_icu4c67_1 && switch_openssl1_1 && switch-php -v 8.0' # not tested
-
+# new sphp as of 2021-01-28 and using tap from shivammathur
+alias sphp70='switch-php -v 7.0'
+alias sphp72='switch-php -v 7.2'
+alias sphp73='switch-php -v 7.3'
+alias sphp74='switch-php -v 7.4'
+alias sphp80='switch-php -v 8.0'
 
 alias php-versions='brew ls --versions php@5{0..7} php@7.{0..5} php@8.{0..5}'
 
@@ -97,6 +72,13 @@ export COMPOSER_PROCESS_TIMEOUT=900
 export COMPOSER_MEMORY_LIMIT=2G
 
 
+function composer_global_check_installation() {
+    for dependency in consolidation/cgr laravel/valet laravel/installer
+    do
+        echo "TODO check composer install for $dependency" || true
+    done
+}
+
 function imagick_test() {
 
     if [ $# -ne 1 ]; then
@@ -117,184 +99,6 @@ IMAGICK_TEST
 }
 
 
-function brew_php_install() {
-    # `2020-06 Catalina 10.5.5`
-    # https://getgrav.org/blog/macos-catalina-apache-multiple-php-versions
-
-    # On the first install we need to be based on php70 for composer global installs
-
-    # tap required repos for php70 and extensions
-    brew tap bgdevlab/php-ext # we need php70 imap
-    brew tap bgdevlab/homebrew-deprecated # php-70
-    brew tap shivammathur/php
-
-    # 2021-01-13 - POSSIBLE future usage - TODO Investigate - https://github.com/shivammathur/homebrew-php
-
-    # note: 2020-12-02 for add icu4c@64.2 and openssl@1.0 for catalina fixes below using the require  `brew extract` process 
-    #  we've added the Formula files for reference and possible use in this script (later) to branch `catalina` at - https://github.com/bgdevlab/homebrew-deprecated/tree/catalina/Formula
-
-    # php70 requires openssl-1.0.0
-    # brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/8b9d6d688f483a0f33fcfc93d433de501b9c3513/Formula/openssl.rb # cant do it this way anymore 20200910
-    # brew switch openssl 1.0.2t # brew cleanup may remove this
-
-    # idea-1: brew tap bgdevlab/homebrew-deprecated && pushd $(brew --repo bgdevlab/deprecated) git checkout develop # this branch has openssl@1.0
-    # brew extract recommended as brew reinstall from github URL not supported anymore 20200910
-    brew extract --version 1.0 -v -d --force openssl bgdevlab/deprecated && HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew reinstall openssl@1.0
-    echo -e "Are you sure openssl@1.0 has been built. The last step usually takes a few minutes to build from the Formula."
-    read -r -p "Press enter to continue" response
-
-    # php70 requires icu4 64 - it changed from 64 to 67 in 10.5.5 - fix that
-    # https://gist.github.com/berkedel/d1fc6d13651c16002f64653096d1fded
-    # brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/a806a621ed3722fb580a58000fb274a2f2d86a6d/Formula/icu4c.rb # cant do it this way anymore 20200910
-    brew extract --version 64.2 -v -d --force icu4c bgdevlab/deprecated && HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew reinstall icu4c@64.2
-    echo -e "Are you sure openssl@1.0 has been built. The last step usually takes a few minutes to build from the Formula."
-    read -r -p "Press enter to continue" response
-
-    switch_icu4c64_2 # brew cleanup may remove this
-
-    # prepare for install
-    brew reinstall zlib libmemcached openldap libiconv jq pkg-config
-    HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew reinstall php@7.0 php@7.0-imap imagemagick
-
-    # install the latest switch-php
-    type -p nvm &>/dev/null && nvm use default && npm install --global https://github.com/bgdevlab/switch-php#bgdevlab
-    type -p nvm &>/dev/null && nvm use stable && npm install --global https://github.com/bgdevlab/switch-php#bgdevlab
-
-
-    # switch_openssl1_0 && switch_icu4c64_2 && echo "prepared for php@7.0" && switch-php 7.0
-    sphp70
-
-    # ensure composer packages are ready
-    type -p composer &>/dev/null || brew install composer
-
-    # plugins are an issue in Composer v2 - prestissimo likely not needed due to perf improvements
-    # composer global show -q hirak/prestissimo &>/dev/null || composer global require hirak/prestissimo -vvv
-    composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
-
-    # this we need to install php7.0 first on a new box!
-    cgr laravel/valet
-    valet install  --no-interaction -vvv
-    valet trust
-    brew services list
-
-    sudo rm -rf /private/tmp/pear/
-
-    phpver=7.0
-    # brew reinstall php@7.0 php@7.0-imap imagemagick
-    # switch_openssl1_0 && switch_icu4c64_2 && echo "prepared for php@7.0" && switch-php 7.0
-    sphp70
-
-    switch-php $phpver
-    # ensure /usr/local/bin is before /usr/bin if you want to favour brew's bins
-
-    # pecl install extensions
-    printf "\n" | pecl uninstall redis imagick apcu
-    printf "\n" | pecl install redis imagick apcu
-    echo $(pkg-config libmemcached --variable=prefix) | pecl install memcached # !! --with-zlib-dir=/usr/local/Cellar/zlib/1.2.11
-
-    # remove pecl extension from php.ini
-    sed -i'' -e '/^extension="redis.so"/d' /usr/local/etc/php/${phpver}/php.ini /usr/local/etc/php/${phpver}/conf.d/ext-redis.ini &>/dev/null
-    sed -i'' -e '/^extension="imagick.so"/d' /usr/local/etc/php/${phpver}/php.ini /usr/local/etc/php/${phpver}/conf.d/ext-imagick.ini &>/dev/null
-    sed -i'' -e '/^extension="apcu.so"/d' /usr/local/etc/php/${phpver}/php.ini /usr/local/etc/php/${phpver}/conf.d/ext-apcu.ini &>/dev/null
-    sed -i'' -e '/^extension="memcached.so"/d' /usr/local/etc/php/${phpver}/php.ini /usr/local/etc/php/${phpver}/conf.d/ext-apcu.ini &>/dev/null
-    # add pecl extension to separate ini file
-    echo -e "[redis]\nextension=\"redis.so\"" > /usr/local/etc/php/${phpver}/conf.d/ext-redis.ini
-    echo -e "[imagick]\nextension=\"imagick.so\"" > /usr/local/etc/php/${phpver}/conf.d/ext-imagick.ini
-    echo -e "[apcu]\nextension=\"apcu.so\"" > /usr/local/etc/php/${phpver}/conf.d/ext-apcu.ini
-    echo -e "[memcached]\nextension=\"memcached.so\"" > /usr/local/etc/php/${phpver}/conf.d/ext-memcached.ini
-
-
-    imagick_test /private/tmp/imagick_test.php${phpver}.png && echo "imagick correctly installed - see /private/tmp/imagick_test.php${phpver}.png" || echo 'imagick issue exists'
-
-    latest_php='8.0'
-    for phpver in $phpversions
-    do
-        switch_icu4c67_1
-        # brew switch openssl 1.1.0 ?? not sure if this can be done/needed.
-
-        # this install php@$version also
-        HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1 brew reinstall php@$phpver imagemagick
-
-        # php-imap
-        [ $phpver == $latest_php ] && brew install php-imap || brew install php@${phpver}-imap
-
-        switch-php -v $phpver
-
-        printf "\n" | pecl install redis imagick apcu
-        echo $(pkg-config libmemcached --variable=prefix) | pecl install memcached # !! --with-zlib-dir=/usr/local/Cellar/zlib/1.2.11
-
-        # remove pecl extension from php.ini
-        sed -i'' -e '/^extension="redis.so"/d' /usr/local/etc/php/${phpver}/php.ini /usr/local/etc/php/${phpver}/conf.d/ext-redis.ini &>/dev/null
-        sed -i'' -e '/^extension="imagick.so"/d' /usr/local/etc/php/${phpver}/php.ini /usr/local/etc/php/${phpver}/conf.d/ext-imagick.ini &>/dev/null
-        sed -i'' -e '/^extension="apcu.so"/d' /usr/local/etc/php/${phpver}/php.ini /usr/local/etc/php/${phpver}/conf.d/ext-apcu.ini &>/dev/null
-        sed -i'' -e '/^extension="memcached.so"/d' /usr/local/etc/php/${phpver}/php.ini /usr/local/etc/php/${phpver}/conf.d/ext-apcu.ini &>/dev/null
-        # add pecl extension to separate ini file
-        echo -e "[redis]\nextension=\"redis.so\"" > /usr/local/etc/php/${phpver}/conf.d/ext-redis.ini
-        echo -e "[imagick]\nextension=\"imagick.so\"" > /usr/local/etc/php/${phpver}/conf.d/ext-imagick.ini
-        echo -e "[apcu]\nextension=\"apcu.so\"" > /usr/local/etc/php/${phpver}/conf.d/ext-apcu.ini
-        echo -e "[memcached]\nextension=\"memcached.so\"" > /usr/local/etc/php/${phpver}/conf.d/ext-memcached.ini
-
-        imagick_test /private/tmp/imagick_test.php${phpver}.png && echo "imagick correctly installed - see /private/tmp/imagick_test.php${phpver}.png" || echo 'imagick issue exists'
-    done
-
-
-}
-
-
-function valet_help() {
-
-cat << 'HELP' > /dev/stdout
-NGINX
-=====
-tail -n 100 -f $HOME/.config/valet/Log/nginx-error.log
-
-PHP-FPM
-=======
-tail -n 100 -f /usr/local/var/log/php-fpm.log
-HELP
-
-}
-
-function valet_uninstall() {
-    [ -e $HOME/.composer/composer.json ] && composer global remove laravel/valet || echo 'composer global is missing'
-
-    for formula in dnsmasq nginx
-    do
-        brew services stop $formula
-        brew uninstall --force  --ignore-dependencies $formula
-    done
-
-    valet uninstall --force --no-interaction
-
-    for phpversion in $(php-versions | tr ' ' ':')
-    do
-        atver=$(echo $phpversion | cut -d ':' -f1)
-        ver=$(echo $phpversion | cut -d ':' -f2 | tr -d . | cut -c 1,2)
-        if [ "$(echo $atver | grep '@' &>/dev/null && echo 0 || echo 1)" -eq 1 ]; then
-            # this is the default php (latest version in macOs) to continue without removing it.
-            echo -e "Looks like $phpversion is the latest brew supported php version."
-            #continue
-        fi
-        brew services stop $formula &>/dev/null
-        brew uninstall --force --ignore-dependencies php${ver}-xdebug php${ver}-imagick $atver php${ver} ${atver}-imap || true
-
-        # force tidyup of empty brew formula directories
-        for dir in /usr/local/Cellar/{php$ver-xdebug,php$ver-imagick,$atver,php$ver,$atver-imap};
-        do
-            [ -e $dir ] && rm -rf "${dir}"
-        done
-    done
-
-    [ -e  ~/.valet ]  && sudo rm -r ~/.valet
-
-    brew cleanup
-    rm -rf /usr/local/etc/php/* /private/tmp/pear/* /usr/local/lib/php/* /usr/local/share/php* /usr/local/share/pear*
-    # todo - consider tidying /Library/LaunchDaemons/homebrew.mxcl*.plist
-    # todo - consider tidying ~/Library/LaunchAgents/homebrew.mxcl*.plist
-
-    echo "recommend re-installing php versions"
-}
-
 function composer_global_install() {
 
     type -p composer &>/dev/null || brew install composer
@@ -314,10 +118,137 @@ function composer_global_install() {
 
     cgr update laravel/installer &>/dev/null || cgr laravel/installer
     cgr update laravel/valet &>/dev/null || cgr laravel/valet
-    # cgr update deployer/deployer &>/dev/null || cgr deployer/deployer # cgr remove deployer/deployer    
     alias dep='vendor/bin/dep'
 
     # php 7.2+ only
     # cgr update tightenco/takeout &>/dev/null || cgr tightenco/takeout
+}
+
+
+function php_uninstall() {
+  echo "start:  ${FUNCNAME[0]}"
+  for formula in $(brew ls --formula -1 | egrep '^php|^imap@|^imagick'); do
+    brew uninstall --force --ignore-dependencies "$formula"
+  done
+
+  for formula in $(brew services list | grep '^php' | cut -d' ' -f1); do
+    brew services stop $formula &> /tmp/php_uninstall
+    brew services remove $formula &> /tmp/php_uninstall
+  done
+
+  # force tidyup of empty brew formula directories
+  find /usr/local/Cellar -type d -empty -maxdepth 1 -exec rm -rf {} \;
+
+  sudo rm -rf /usr/local/Cellar/php@*
+
+  brew cleanup
+  echo "finish: ${FUNCNAME[0]}"
+}
+
+
+function valet_uninstall() {
+  echo "start:  ${FUNCNAME[0]}"
+  php_uninstall
+
+  [ -e $HOME/.composer/composer.json ] && composer global remove laravel/valet || echo 'valet not installed via composer global'
+  [ -e $HOME/.composer/global/laravel/valet/composer.json ] && cgr remove laravel/valet || echo 'valet not installed with cgr'
+
+  for formula in dnsmasq nginx; do
+      brew services stop $formula || sudo brew services stop $formula
+      brew uninstall --force --ignore-dependencies "$formula" || sudo rm -rf /usr/local/Cellar/$formula
+  done
+
+  type -p valet &>/dev/null && valet uninstall --force --no-interaction &>/dev/null
+
+  # force tidyup of empty brew formula directories
+  find /usr/local/Cellar -type d -empty -maxdepth 1 -exec rm -rf {} \;
+
+  [ -e  ~/.valet ] && sudo rm -r ~/.valet
+
+  rm -rf /usr/local/etc/php/* /private/tmp/pear/* /usr/local/lib/php/* /usr/local/share/php* /usr/local/share/pear*
+  sudo rm -rf /private/tmp/pear/ &>/dev/null
+  brew cleanup
+
+  # todo - consider tidying /Library/LaunchDaemons/homebrew.mxcl*.plist
+  # todo - consider tidying ~/Library/LaunchAgents/homebrew.mxcl*.plist
+
+  echo "recommend re-installing php versions"
+  echo "finish: ${FUNCNAME[0]}"
+}
+
+function valet_install() {
+    echo "start:  ${FUNCNAME[0]}"
+    # for valet we need to be using php7.0 first on a new box!
+    switch-php 7.0
+    cgr laravel/valet
+    valet install --no-interaction -vvv
+    valet trust
+    brew services list
+    echo "finish: ${FUNCNAME[0]}"
+}
+
+function php_install() {
+    echo "start:  ${FUNCNAME[0]}"
+    # `2021-01-28 BigSur 11.1`
+    # https://getgrav.org/blog/macos-catalina-apache-multiple-php-versions
+    # https://github.com/shivammathur/homebrew-php
+    # https://github.com/shivammathur/homebrew-extensions
+
+    # On the first install we need to be based on php70 for composer global installs
+    brew tap shivammathur/php
+    brew tap shivammathur/extensions
+
+    # prepare for install
+    brew reinstall zlib libmemcached openldap libiconv jq pkg-config openssl icu4c
+
+    # install the latest switch-php
+    type -p nvm &>/dev/null && nvm use default && npm install --global https://github.com/bgdevlab/switch-php#bgdevlab
+    type -p nvm &>/dev/null && nvm use stable && npm install --global https://github.com/bgdevlab/switch-php#bgdevlab
+
+    # ensure composer packages are ready
+    type -p composer &>/dev/null || brew install composer
+
+    # plugins are an issue in Composer v2 - prestissimo likely not needed due to perf improvements
+    composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
+    brew reinstall openssl # pecl required refresh of certificates
+
+    for phpVer in 7.0 7.2 7.4 8.0; do
+      echo -e "\n=========== install php-$phpVer ============\n";
+      brew install shivammathur/php/php@$phpVer;
+      brew link --overwrite --force php@$phpVer;
+
+      brew install shivammathur/extensions/imagick@$phpVer;
+      brew install shivammathur/extensions/imap@$phpVer;
+
+      rm -f /usr/local/etc/php/${phpVer}/conf.d/{redis,apcu,memcached}.ini &>/dev/null
+
+      for PHPEXT in redis apcu memcached; do
+        printf "\n" | pecl install $PHPEXT | egrep '^Installing|completed|downloading|fail|already'
+        [ "$(php -m | egrep -e "^$PHPEXT" | wc -l)" -eq 1 ] && \
+          echo "module $PHPEXT loaded" || \
+          echo -e "[$PHPEXT]\nextension=\"$(find $(php-config --extension-dir) -name *$PHPEXT.so)\"" > /usr/local/etc/php/${phpVer}/conf.d/$PHPEXT.ini
+      done
+
+      [ "$(php -m | egrep -e '^apcu|^redis|^memcache' | wc -l)" -eq 3 ] && echo 'php modules installed' || echo 'php modules missing'
+      imagick_test /private/tmp/imagick_test.php${phpVer}.png && echo "imagick correctly installed - see /private/tmp/imagick_test.php${phpVer}.png" || echo 'imagick issue exists'
+    done
+
+    sudo rm -rf /private/tmp/pear/ &>/dev/null
+    echo "finish: ${FUNCNAME[0]}"
+}
+
+
+function valet_help() {
+
+cat << 'HELP' > /dev/stdout
+NGINX
+=====
+tail -n 100 -f $HOME/.config/valet/Log/nginx-error.log
+
+PHP-FPM
+=======
+tail -n 100 -f /usr/local/var/log/php-fpm.log
+HELP
 
 }
+
