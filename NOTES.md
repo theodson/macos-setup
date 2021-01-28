@@ -396,7 +396,7 @@ pecl list -a | egrep 'redis|imagick|apcu|xdebug|memcached'
 alias sphp70='switch_icu4c64_2 && switch_openssl1_0 && switch-php -v 7.0'
 echo "alias sphp70='switch_icu4c64_2 && switch_openssl1_0 && switch-php -v 7.0'" >> ~/.bash/adhoc.sh
 
-export phpversions="7.2 7.4"
+export phpversions="7.2 7.4 8.0"
 
 latest_php='7.4'
 for version in $phpversions

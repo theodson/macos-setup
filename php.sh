@@ -126,6 +126,7 @@ function brew_php_install() {
     # tap required repos for php70 and extensions
     brew tap bgdevlab/php-ext # we need php70 imap
     brew tap bgdevlab/homebrew-deprecated # php-70
+    brew tap shivammathur/php
 
     # 2021-01-13 - POSSIBLE future usage - TODO Investigate - https://github.com/shivammathur/homebrew-php
 
