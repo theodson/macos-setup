@@ -127,6 +127,9 @@ function composer_global_install() {
 
 function php_uninstall() {
   echo "start:  ${FUNCNAME[0]}"
+  brew untap -q bgdevlab/php-ext &>/dev/null # remove conflicting tap
+  brew untap -q bgdevlab/homebrew-deprecated &>/dev/null # remove conflicting tap
+
   for formula in $(brew ls --formula -1 | egrep '^php|^imap@|^imagick'); do
     brew uninstall --force --ignore-dependencies "$formula"
   done
@@ -193,6 +196,9 @@ function php_install() {
     # https://getgrav.org/blog/macos-catalina-apache-multiple-php-versions
     # https://github.com/shivammathur/homebrew-php
     # https://github.com/shivammathur/homebrew-extensions
+
+    brew untap -q bgdevlab/php-ext &>/dev/null # remove conflicting tap
+    brew untap -q bgdevlab/homebrew-deprecated &>/dev/null # remove conflicting tap
 
     # On the first install we need to be based on php70 for composer global installs
     brew tap shivammathur/php
