@@ -98,18 +98,27 @@ composer_global_install
 ### php 
 
 Installing multiple versions of php from `7.0`,`7.2`, `7.4` and `8.0` has become significantly easier on BigSur with the 
-help `shivammathur/php` and `shivammathur/extensions`. 
+help of `shivammathur/php` and `shivammathur/extensions`. 
 
 Three helper functions exist to support installation and re-installation, see `php.sh`.
 
-The reinstall try this
+To re-install try this
 ```
+# this sequence can (and may need to) be rerun 
 valet_uninstall
 php_install
 valet_install
 ```
 
-> **Note**: `valet_uninstall` exists to remove valet completely if it is causing issues.
+You may need to adjust the `adhoc.sh` file if it includes `_switch_php_pre_tasks` or `_switch_php_post_tasks` as these have 
+changed since  __BigSur 2021-01__ changes.
+```
+mv ~/.bash/adhoc.sh ~/.bash/adhoc.sh.pre_big_sur
+cp ~/.bash/templates/adhoc.sh ~/.bash/adhoc.sh
+```
+
+> **Note**: `valet_uninstall` exists to remove valet and php completely if you are having either/or issues.
+> **Note**: `valet_uninstall` exists to remove valet and php completely if you are having either/or issues.
 
 
 ### Postgres 9.5
