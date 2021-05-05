@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
 
-[ -f ~/.bash/ps1.sh ] && source ~/.bash/ps1.sh || true # start aware prompt
-[ -f ~/.bash/bash.sh ] && source ~/.bash/bash.sh || true
-[ -f ~/.bash/java.sh ] && source ~/.bash/java.sh || true
-[ -f ~/.bash/php.sh ] && source ~/.bash/php.sh || true
-[ -f ~/.bash/js.sh ] && source ~/.bash/js.sh || true
-[ -f ~/.bash/virtualize.sh ] && source ~/.bash/virtualize.sh || true
-[ -f ~/.bash/apps.sh ] && source ~/.bash/apps.sh || true
-[ -f ~/.bash/scm.sh ] && source ~/.bash/scm.sh || true
+#
+# get the folder the 'current' script (as called from) is working under, https://stackoverflow.com/questions/59895
+#
+function scriptdir() {
+  echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+}
+
+[ -f $(scriptdir)/ps1.sh ] && source $(scriptdir)/ps1.sh || true # start aware prompt
+[ -f $(scriptdir)/bash.sh ] && source $(scriptdir)/bash.sh || true
+[ -f $(scriptdir)/java.sh ] && source $(scriptdir)/java.sh || true
+[ -f $(scriptdir)/php.sh ] && source $(scriptdir)/php.sh || true
+[ -f $(scriptdir)/js.sh ] && source $(scriptdir)/js.sh || true
+[ -f $(scriptdir)/virtualize.sh ] && source $(scriptdir)/virtualize.sh || true
+[ -f $(scriptdir)/apps.sh ] && source $(scriptdir)/apps.sh || true
+[ -f $(scriptdir)/scm.sh ] && source $(scriptdir)/scm.sh || true
 
 export CLICOLOR=1
 export LSCOLORS=GxFxCxDxBxegedabagaced

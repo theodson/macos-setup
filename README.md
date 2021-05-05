@@ -1,8 +1,8 @@
 # macos-setup
 
-###### Last updated `2021-01` for BigSur
+###### Last updated `2021-05` for BigSur
 
-> **Note**: Ensure macOS is on at least `11.1`
+> **Note**: Ensure macOS is on at least `11.3`
 
 
 For my macOs dev environment setup whilst using `java, maven, ant, node, nvm, npm,  php, laravel, composer, docker, vagrant, vmware`. 
@@ -58,7 +58,7 @@ sudo chown -R $(whoami) /usr/local/sbin
 sudo mkdir -p /usr/local/var/homebrew/linked
 sudo chown -R $(whoami) /usr/local/var/homebrew/linked
 
-brew install httpie wget htop bash-completion gettext
+brew install httpie wget htop bash-completion gettext tmux
 ```
 
 ### xcode
@@ -111,9 +111,14 @@ help of `shivammathur/php` and `shivammathur/extensions`.
 Two helper functions exist to support installation and re-installation, see `php.sh`
 
 ```
-# to re-install try this - this sequence may need to be rerun  
+# to re-install try this - this sequence may need to be rerun
+# this will install php 7.0, 7.2, 7.4 and 8.0
+  
 uninstall_php
 install_php
+sphp72
+sphp74
+sphp80
 ```
 
 On initial setup a default brew recipe for the `latest php` and `php@7.0` is installed. 
@@ -148,7 +153,11 @@ brew install --cask phpmon
 > __Note__: the "Php Monitor" toolbar should only be used ONCE each version has been installed via the `sphp<nn>` commands.
 
 ### Postgres 9.5
-
+Install Postgres with hashlib
+```angular2html
+install_postgres 9.5
+```
+which does the following
 ```sh
 brew reinstall postgresql@9.5
 brew services start postgresql@9.5
@@ -157,6 +166,7 @@ brew services start postgresql@9.5
 brew info postgresql@9.5
 
 ```
+and then hashlib
 
 ### postgres extension - hashlib
 

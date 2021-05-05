@@ -14,7 +14,7 @@ export VALET_HOME_PATH="${HOME}/.config/valet"
 echo $PATH | grep $COMPOSER_HOME &>/dev/null && true || export PATH="$PATH:$COMPOSER_HOME/vendor/bin" # add path if missing
 
 #
-export COMPOSER_DEPS_INSTALL="${COMPOSER_DEPS_INSTALL:-consolidation/cgr laravel/installer tightenco/takeout laravel/valet:^2.15}"
+export COMPOSER_DEPS_INSTALL="${COMPOSER_DEPS_INSTALL:-consolidation/cgr laravel/installer tightenco/takeout laravel/valet:^2.15 jorijn/laravel-security-checker}"
 export COMPOSER_DEPS_UNINSTALL="${COMPOSER_DEPS_UNINSTALL:-hirak/prestissimo deployer/deployer $COMPOSER_DEPS_INSTALL}"
 
 # conveniences
@@ -52,6 +52,7 @@ function require_composer() {
     echo " 🎼 Install Composer for php($(php_version))"
     curl -sS https://getcomposer.org/installer | php -- --install-dir=$HOME/bin/ --filename=composer --version=2.0.13
     composer self-update
+    composer global require jorijn/laravel-security-checker &>/dev/null || echo "cannot install jorijn/laravel-security-checker"
   }
 }
 
@@ -92,7 +93,7 @@ function switch_php() {
   install_valet_overrides
 
   # Next, we now have a default valet installed, we can use it to switch versions
-  valetScript="$(composer global config --absolute vendor-dir)/laravel/valet/valet"
+  valetScript="$VALET_HOME_PATH/laravel/valet/valet"
   echo "🚕  Switching php versions using valet : php@${phpversion}"
   [ -e "$valetScript" ] && {
     ${valetScript} install # this will likely install the most recent version of php before the requested one.
@@ -325,28 +326,24 @@ function cleanup_valet_phpfpm() {
 #
 #
 function install_composer_global() {
-  type -p composer &>/dev/null || require_composer
+  require_composer
 
   while [ $# -gt 0 ]; do
-    reqrev="$1"
+    component_version="$1"
     shift
-    local requirement=$(echo "$reqver" | cut -d: -f1)
-    local version=$(echo "$reqver" | cut -d: -f2)
-    [ "${requirement}" = "${version}" ] && version='' || version=":$version" # fix version info
+    local component=$(echo "$component_version" | cut -d: -f1)
+    local version=$(echo "$component_version" | cut -d: -f2)
+    [ "${component}" = "${version}" ] && version='' || version=":$version" # fix version info
 
-    echo -e "Composer dependency install/update : $reqrev"
+    echo -e "composer global components require : ${component}${version}"
     if [[ "${USE_CGR}" -eq 1 ]]; then
-      cgr update "${requirement}" &>/dev/null || cgr "${requirement}${version}"
+      cgr update "${component}" &>/dev/null || cgr "${component}${version}"
     else
-      composer global show "${requirement}" &>/dev/null && {
-        composer global require -q "${requirement}${version}"
-      } || {
-        composer global update -q "${requirement}"
-      }
+      composer global require "${component}${version}" 2>/dev/null
     fi
-
   done
-
+  echo -e "🎼 composer global components"
+  composer global show -D
   #
   #  # php 7.2+ only - above script lets it silently fail if not compatible.
   #  (($(echo "$(php_version) >= 7.2" | bc -l))) && {
@@ -356,7 +353,8 @@ function install_composer_global() {
 }
 
 #
-#   hirak/prestissimo deployer/deployer laravel/valet laravel/installer consolidation/cgr
+#
+#
 function cleanup_composer_global() {
 
   backup_valet_config
@@ -364,18 +362,18 @@ function cleanup_composer_global() {
   composer -V &>/dev/null || require_composer # we need composer to remove the packages passed to the function
 
   while [ $# -gt 0 ]; do
-    reqrev="$1"
+    component_version="$1"
     shift
-    local requirement=$(echo "$reqver" | cut -d: -f1)
-    local version=$(echo "$reqver" | cut -d: -f2)                            # we'll disregard this
-    [ "${requirement}" = "${version}" ] && version='' || version=":$version" # remove : if empty version info
+    local component=$(echo "$component_version" | cut -d: -f1)
+    local version=$(echo "$component_version" | cut -d: -f2)               # we'll disregard this
+    [ "${component}" = "${version}" ] && version='' || version=":$version" # remove : if empty version info
 
-    echo -e "Composer dependency remove  : $reqrev"
+    echo -e "Composer dependency remove  : $component_version"
     if [[ "${USE_CGR}" -eq 1 ]]; then
       composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
-      cgr remove "${requirement}" &>/dev/null || true
+      cgr remove "${component}" &>/dev/null || true
     else
-      composer global remove "${requirement}" &>/dev/null || true
+      composer global remove "${component}" &>/dev/null || true
     fi
   done
 
