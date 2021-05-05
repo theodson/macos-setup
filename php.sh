@@ -7,7 +7,7 @@
 export USE_VALET_SWITCH_PHP=1
 export USE_CGR=0
 
-export COMPOSER_HOME=$HOME/.composer
+export COMPOSER_HOME=$HOME/.composer # $(composer global config --absolute vendor-dir)
 export COMPOSER_PROCESS_TIMEOUT=900 # default is COMPOSER_PROCESS_TIMEOUT=300
 export COMPOSER_MEMORY_LIMIT=2G
 export VALET_HOME_PATH="${HOME}/.config/valet"
@@ -93,7 +93,7 @@ function switch_php() {
   install_valet_overrides
 
   # Next, we now have a default valet installed, we can use it to switch versions
-  valetScript="$VALET_HOME_PATH/laravel/valet/valet"
+  valetScript="$COMPOSER_HOME/vendor/laravel/valet/valet"
   echo "🚕  Switching php versions using valet : php@${phpversion}"
   [ -e "$valetScript" ] && {
     ${valetScript} install # this will likely install the most recent version of php before the requested one.
