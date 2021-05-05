@@ -7,6 +7,9 @@
 [ -f /usr/local/etc/bash_completion ] && . /usr/local/etc/bash_completion || echo -e "missing bash-completion, try\n\tbrew install bash-completion"
 [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"
 
+# Brew
+alias bsl='sudo brew services list'
+
 # Get VSCode extensions
 alias codeextensions='code --list-extensions | xargs -L 1 echo code --install-extension'
 alias subl=code
@@ -47,8 +50,9 @@ function dockspace {
   killall Dock
 }
 
-
+#
 # macOs - what app is running on a port
+#
 function what_port() {
   if [ $# -ne 1 ]; then 
     echo "need to know the port"; 
@@ -61,8 +65,9 @@ function what_port() {
 }
 alias whatport="what_port"
 
-
+#
 # Function to open specified project in projects folder
+#
 function op {
   echo "ENV(WORKSPACE):${WORKSPACE}"
   # to override use set WORKSPACE, e.g. WORKSPACE=~/Documents/Projects op
@@ -103,11 +108,19 @@ function op {
   fi
 }
 
-# #########################################################
+#
 # Allow "tr" to process non-utf8 byte sequences, read random bytes and keep only alphanumerics
+#
 function genRandom() {
   length=${1:-32}
   LC_CTYPE=C tr -dc A-Za-z0-9 < /dev/urandom | head -c$length
+}
+
+#
+# get the folder the 'current' script (as called from) is working under, https://stackoverflow.com/questions/59895
+#
+function scriptdir() {
+  echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 }
 
 # #########################################################
@@ -164,7 +177,7 @@ function ssh_prepare_keyexchange() {
 
 # macOs - check for expected brew installs
 function brew_check_installation() {
-    for formula in httpie wget gettext htop bash-completion zlib jq pkg-config tree
+    for formula in httpie wget gettext htop bash-completion zlib jq pkg-config tree tmux
     do
         if [ "" = "`brew ls --versions $forumla`" ]; then
             echo "install brew install $forumla"

@@ -3,7 +3,7 @@
 # #########################################################
 #    JS Node NPM
 
-alias fixjs='rm -rf node_modules/ && npm install'
+alias fixjs='rm -rf node_modules/;npm cache clear --force && npm install'
 alias ng='npm list -g --depth=0'
 alias nl='npm list --depth=0'
 

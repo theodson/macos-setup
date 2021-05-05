@@ -92,34 +92,60 @@ js_env_install
 
 ```
 # php helper script - php.sh
-composer_global_install
+install_composer_global
 ```
 
 ### php 
 
 Installing multiple versions of php from `7.0`,`7.2`, `7.4` and `8.0` has become significantly easier on BigSur with the 
 help of `shivammathur/php` and `shivammathur/extensions`. 
+ 
+> Since: 2021-05-01
+> 
+> PHP installation relies more and more on `laravel/valet`'s `use php@n.n` and `install` commands.  
+> A customised `valet/ValetPhpFpm.php` is installed into the laravel home `$HOME/.config/valet/Extensions` and overrides
+> some methods to better support our custom install (_and fixes a few issues - in time these may disappear with each valet release._)
+> 
+> The `switch-php` __npm package__ is no longer used.
+ 
+Two helper functions exist to support installation and re-installation, see `php.sh`
 
-Three helper functions exist to support installation and re-installation, see `php.sh`.
-
-To re-install try this
 ```
-# this sequence can (and may need to) be rerun 
-valet_uninstall
-php_install
-valet_install
+# to re-install try this - this sequence may need to be rerun  
+uninstall_php
+install_php
 ```
 
-You may need to adjust the `adhoc.sh` file if it includes `_switch_php_pre_tasks` or `_switch_php_post_tasks` as these have 
-changed since  __BigSur 2021-01__ changes.
+On initial setup a default brew recipe for the `latest php` and `php@7.0` is installed. 
+After that use the `sphp<nn>` aliases ( see notes below ) to install new versions, e.g
+```
+# to install php 7.4
+sphp74 
+```
+
+Review the contents of `templates/adhoc.sh` as you may need to adjust your own `adhoc.sh` file.
+
+- removal `_switch_php_pre_tasks` or `_switch_php_post_tasks` 
+- introduce `PECL_EXTENSIONS` for automatic installation during `valet use|install` tasks.
+- introduce `BREW_EXTENSIONS` for automatic installation during `valet use|install` tasks.
+
+
 ```
 mv ~/.bash/adhoc.sh ~/.bash/adhoc.sh.pre_big_sur
 cp ~/.bash/templates/adhoc.sh ~/.bash/adhoc.sh
 ```
 
-> **Note**: `valet_uninstall` exists to remove valet and php completely if you are having either/or issues.
-> **Note**: `valet_uninstall` exists to remove valet and php completely if you are having either/or issues.
+### Switching php version
 
+The aliases `sphp70, sphp72, sphp74, sphp80` exist to switch version. 
+
+A macOs task bar tool called Php Monitor is also installed during `php_install` - see `nicoverbruggen/homebrew-cask`.
+
+```
+brew tap nicoverbruggen/homebrew-cask
+brew install --cask phpmon
+```
+> __Note__: the "Php Monitor" toolbar should only be used ONCE each version has been installed via the `sphp<nn>` commands.
 
 ### Postgres 9.5
 
