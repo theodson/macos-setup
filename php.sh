@@ -1,22 +1,40 @@
 #!/usr/bin/env bash
+#
+# 2021-05-04
+# - Valet is used to switch PHP versions
+# - CGR - rely on manual control of indpendent composer installation per php version, might get around need for CGR
+#
+export USE_VALET_SWITCH_PHP=1
+export USE_CGR=0
 
-# #########################################################
-#    PHP
-# new sphp as of 2021-01-28 and using tap from shivammathur
-alias sphp70='switch-php -v 7.0'
-alias sphp72='switch-php -v 7.2'
-alias sphp73='switch-php -v 7.3'
-alias sphp74='switch-php -v 7.4'
-alias sphp80='switch-php -v 8.0'
+export COMPOSER_HOME=$HOME/.composer
+export COMPOSER_PROCESS_TIMEOUT=900 # default is COMPOSER_PROCESS_TIMEOUT=300
+export COMPOSER_MEMORY_LIMIT=2G
+export VALET_HOME_PATH="${HOME}/.config/valet"
+echo $PATH | grep $COMPOSER_HOME &>/dev/null && true || export PATH="$PATH:$COMPOSER_HOME/vendor/bin" # add path if missing
 
-alias php-versions='brew ls --versions php@5{0..7} php@7.{0..5} php@8.{0..5}'
+#
+COMPOSER_DEPS_INSTALL="${COMPOSER_DEPS_INSTALL:-consolidation/cgr laravel/installer tightenco/takeout laravel/valet:^2.15}"
+COMPOSER_DEPS_UNINSTALL="${COMPOSER_DEPS_UNINSTALL:-hirak/prestissimo deployer/deployer $COMPOSER_DEPS_INSTALL}"
 
-# Laravel Artisan 
+# conveniences
+alias easytimenow='date +%Y%m%d_%H%M_%s'
+alias php_version='php -r "echo PHP_VERSION;" | cut -d. -f-2' # current php version
+
+# switch between php versions - since 2021-05 using valet use php@n.n
+alias sphp70='switch_php 7.0'
+alias sphp72='switch_php 7.2'
+alias sphp73='switch_php 7.3'
+alias sphp74='switch_php 7.4'
+alias sphp80='switch_php 8.0'
+
+# Laravel
 alias artisan='php artisan'
 alias tinker='php artisan tinker'
+alias sail='bash vendor/bin/sail'
 
 # PHPDeployer - https://deployer.org
-alias dep='vendor/bin/dep' # no global install - (composer 2 issue) - use project's vendor install.
+alias dep='vendor/bin/dep'                    # no global install - (composer 2 issue) - use project's vendor install.
 alias prov='APP_ENV=deployer dep -f=prov.php' # custom deployer command for provisioning
 
 # PhpUnit
@@ -29,9 +47,79 @@ alias phpspec='/usr/local/bin/phpspec'
 #alias phpunit='vendor/bin/phpunit --log-junit scratch/phpunit_$(echo ${phpunitpart:-report}).$(date "+%Y_%m_%d.%H%M%S").xml'
 alias phpunit='vendor/bin/phpunit --log-junit $(echo ${phpunitdir:-scratch})/phpunit_$(echo ${phpunitpart:-report}).xml'
 
+function require_composer() {
+  composer -V &>/dev/null && true || {
+    echo " 🎼 Install Composer for php($(php_version))"
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=$HOME/bin/ --filename=composer --version=2.0.13
+    composer self-update
+  }
+}
 
-# Laravel 
-function clearall() { 
+function require_valet() {
+  # optional arg1 is PHP Version in n.n format
+  require_composer
+
+  # remove older
+  /bin/rm -f $(brew --prefix)/bin/valet &>/dev/null
+
+  # Valet::symlinkToUsersBin handles creating this, called as part of command 'valet install'.
+  # Possible issue with that valet command is installed into a global space '/usr/local/bin/valet' that is symlinked to
+  update_composer_global
+  composer global require laravel/valet:^2.15 &>/dev/null || return 1
+}
+
+function install_valet_overrides() {
+
+  mkdir -p "${VALET_HOME_PATH}/Extensions/" &>/dev/null
+  ln -nf "$(scriptdir)/valet/ValetPhpFpm.php" "${VALET_HOME_PATH}/Extensions/" && {
+    echo "👍 Custom Valet PhpFpm class installed - this will override the default valet PhpFpm behaviour. See ${VALET_HOME_PATH}/Extensions/"
+  } || {
+    echo "👎 Custom Valet PhpFpm class failed to install at ${VALET_HOME_PATH}/Extensions/"
+  }
+}
+
+function switch_php() {
+  # https://laracasts.com/discuss/channels/general-discussion/issues-with-laravel-valet-when-installing-old-php-version
+  # https://freek.dev/1185-easily-switch-php-versions-in-laravel-valet
+
+  local phpversion=$1 # n.n format
+  [[ $# -ne 1 ]] && {
+    echo "function ${FUNCNAME}(php_version) - required use n.n style"
+    return 1
+  }
+  require_valet
+
+  install_valet_overrides
+
+  # Next, we now have a default valet installed, we can use it to switch versions
+  valetScript="$(composer global config --absolute vendor-dir)/laravel/valet/valet"
+  echo "🚕  Switching php versions using valet : php@${phpversion}"
+  [ -e "$valetScript" ] && {
+    ${valetScript} install # this will likely install the most recent version of php before the requested one.
+    #    ${valetScript} install &>/dev/null || echo "👎 Valet install failed"
+    ${valetScript} use php@${phpversion} --force
+  } || {
+    echo "👎 composer require for valet failed to install at ${valetScript}"
+  }
+
+  # Next - global update and install
+  update_composer_global
+
+  # Next - add valet for the php version switched to
+  require_valet # install valet if its missing.
+
+  # Next - install valet
+  [ -e $COMPOSER_HOME/laravel/valet/valet ] && $COMPOSER_HOME/laravel/valet/valet install
+
+  # read -p "Press enter to continue ( about to run Valet Restart )"
+  echo "🚕 Valet Restart"
+  valet restart
+  sudo brew services list
+
+}
+
+# Laravel
+function clearall() {
   [ ! -e ./artisan ] && echo "no artisan" && return
   artisan cache:clear
   artisan config:clear
@@ -41,52 +129,42 @@ function clearall() {
 }
 
 # autocomplete - PHP - Deployer - add auto-complete for our prov alias
-type -t _deployer ^>/dev/null && complete -o default -F _deployer prov
+type -t _deployer ^ >/dev/null && complete -o default -F _deployer prov
 
+#
 # autocomplete - Laravel - Artisan - https://gist.github.com/jhoff/8fbe4116d74931751ecc9e8203dfb7c4
-_artisan()
-{
-	COMP_WORDBREAKS=${COMP_WORDBREAKS//:}
-	COMMANDS=`php artisan --raw --no-ansi list | sed "s/[[:space:]].*//g"`
-	COMPREPLY=(`compgen -W "$COMMANDS" -- "${COMP_WORDS[COMP_CWORD]}"`)
-	return 0
+#
+_artisan() {
+  COMP_WORDBREAKS=${COMP_WORDBREAKS//:/}
+  COMMANDS=$(php artisan --raw --no-ansi list | sed "s/[[:space:]].*//g")
+  COMPREPLY=($(compgen -W "$COMMANDS" -- "${COMP_WORDS[COMP_CWORD]}"))
+  return 0
 }
 complete -F _artisan art
 complete -F _artisan artisan
- 
-_prov()
-{
-COMP_WORDBREAKS=${COMP_WORDBREAKS//:}
-COMMANDS=`dep -f=prov.php --raw --no-ansi list | sed "s/[[:space:]].*//g"`
-COMPREPLY=(`compgen -W "$COMMANDS" -- "${COMP_WORDS[COMP_CWORD]}"`)
-return 0
+
+#
+# provision autocomplete
+#
+_prov() {
+  COMP_WORDBREAKS=${COMP_WORDBREAKS//:/}
+  COMMANDS=$(dep -f=prov.php --raw --no-ansi list | sed "s/[[:space:]].*//g")
+  COMPREPLY=($(compgen -W "$COMMANDS" -- "${COMP_WORDS[COMP_CWORD]}"))
+  return 0
 }
 complete -F _prov prov
 
-# Ensure Composer Global is in the path
-# consider using https://github.com/consolidation/cgr
-export PATH="~/.composer/vendor/bin:$PATH"
-
-# default is COMPOSER_PROCESS_TIMEOUT=300
-export COMPOSER_PROCESS_TIMEOUT=900
-export COMPOSER_MEMORY_LIMIT=2G
-
-
-function composer_global_check_installation() {
-    for dependency in consolidation/cgr laravel/valet laravel/installer
-    do
-        echo "TODO check composer install for $dependency" || true
-    done
-}
-
+#
+# test
+#
 function imagick_test() {
 
-    if [ $# -ne 1 ]; then
-        echo "usage: ${FUNCNAME[0]} filename"
-        return 1
-    fi
-    outputfile=$1
-    php <<"IMAGICK_TEST" > $outputfile
+  if [ $# -ne 1 ]; then
+    echo "usage: ${FUNCNAME[0]} filename"
+    return 1
+  fi
+  outputfile=$1
+  php <<"IMAGICK_TEST" >$outputfile
 <?php
 $im = new Imagick();
 $im->newPseudoImage(650, 250, "gradient:red-black");
@@ -94,167 +172,223 @@ $im->setImageFormat('png');
 header("Content-Type: image/png");
 echo $im;
 IMAGICK_TEST
-    file $outputfile | grep 'PNG image data'
-    return $?
+  file $outputfile | grep 'PNG image data'
+  return $?
 }
 
-
-function composer_global_install() {
-
-    type -p composer &>/dev/null || brew install composer
-    # composer global show -q hirak/prestissimo &>/dev/null || composer global require hirak/prestissimo -vvv
-    composer global remove hirak/prestissimo || true
-    composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
-
-    # if they exist as global installs remove them as CGR will install them
-    composer global remove deployer/deployer --ignore-platform-reqs &>/dev/null || true
-    composer global remove laravel/valet --ignore-platform-reqs &>/dev/null || true
-    composer global remove laravel/installer --ignore-platform-reqs &>/dev/null || true
-
-    sphp70
-    # use php70 as base dependency for these tools.
-    # if using later versions of php when installing via composer/cgr then dependencies are matched there, hence when
-    # switching back to lower version of php we encounter vender package issues.
-
-    cgr update laravel/installer &>/dev/null || cgr laravel/installer
-    cgr update laravel/valet &>/dev/null || cgr laravel/valet
-    alias dep='vendor/bin/dep'
-
-    # php 7.2+ only
-    # cgr update tightenco/takeout &>/dev/null || cgr tightenco/takeout
+function backup_valet_config() {
+  # backup any existing composer global definitions.
+  backup_config="$HOME/backup_composer_and_valet_config.$(easytimenow).tar.gz"
+  tar -czf $backup_config $(composer global config --absolute home 2>/dev/null)/config.json $HOME/.valet $HOME/.config/valet &>/dev/null
+  [ -e "$backup_config" ] && {
+    echo "👍 backup of composer and valet configuration completed - see $backup_config"
+  } || {
+    echo "👎 backup of composer and valet configuration ($backup_config) FAILED"
+  }
 }
 
-
-function php_uninstall() {
+#
+# uninstall_valet valet_uninstall
+#
+function uninstall_valet() {
   echo "start:  ${FUNCNAME[0]}"
-  brew untap -q bgdevlab/php-ext &>/dev/null # remove conflicting tap
+
+  backup_valet_config
+
+  composer global remove laravel/valet &>/dev/null || echo 'valet not installed via composer global'
+  cgr remove laravel/valet &>/dev/null || echo 'valet not installed with cgr'
+
+  echo "🤞 uninstall brew services"
+  for formula in dnsmasq nginx; do
+    sudo brew services stop $formula &>/dev/null
+    sudo brew uninstall --force --ignore-dependencies "$formula" &>/dev/null || sudo rm -rf /usr/local/Cellar/$formula
+    brew uninstall --force --ignore-dependencies "$formula" &>/dev/null || sudo rm -rf /usr/local/Cellar/$formula
+  done
+
+  echo "🤞 uninstall valet"
+  type -p valet &>/dev/null && valet uninstall --force --no-interaction &>/dev/null
+
+  echo "🤞 force tidyup of empty brew formula directories"
+  find /usr/local/Cellar -type d -empty -maxdepth 1 -exec rm -rf {} \;
+
+  [ -d ~/.valet ] && sudo rm -r ~/.valet &>/dev/null
+  [ -d ~/.config/valet ] && sudo rm -r ~/.config/valet &>/dev/null
+
+  echo "🤞 force tidyup of php / pecl / pear directories"
+  sudo rm -rf /usr/local/etc/php/* /private/tmp/pear/* /usr/local/lib/php/* /usr/local/share/php* /usr/local/share/pear* &>/dev/null
+  sudo rm -rf /private/tmp/pear/ &>/dev/null
+
+  brew cleanup -q &>/dev/null
+  echo "finish: ${FUNCNAME[0]}"
+}
+
+#
+# uninstall_php php_uninstall
+#
+function uninstall_php() {
+  echo "start:  ${FUNCNAME[0]}"
+  brew untap -q bgdevlab/php-ext &>/dev/null             # remove conflicting tap
   brew untap -q bgdevlab/homebrew-deprecated &>/dev/null # remove conflicting tap
+
+  # all php versions will be uninstalled when running valet uninstall --force
+  uninstall_valet
 
   for formula in $(brew ls --formula -1 | egrep '^php|^imap@|^imagick'); do
     brew uninstall --force --ignore-dependencies "$formula"
   done
 
   for formula in $(brew services list | grep '^php' | cut -d' ' -f1); do
-    brew services stop $formula &> /tmp/php_uninstall
-    brew services remove $formula &> /tmp/php_uninstall
+    brew services stop $formula &>/dev/null
+    brew services remove $formula &>/dev/null
+    sudo brew services stop $formula &>/dev/null
+    sudo brew services remove $formula &>/dev/null
   done
 
   # force tidyup of empty brew formula directories
   find /usr/local/Cellar -type d -empty -maxdepth 1 -exec rm -rf {} \;
 
-  sudo rm -rf /usr/local/Cellar/php@*
+  sudo rm -rf /usr/local/Cellar/php@* /usr/local/Cellar/php
 
-  brew cleanup
+  sudo /bin/rm -f $(brew --prefix)/bin/valet &>/dev/null
+
+  brew cleanup -q &>/dev/null
+
+  uninstall_composer_global $COMPOSER_DEPS_UNINSTALL
+
   echo "finish: ${FUNCNAME[0]}"
+
 }
 
-
-function valet_uninstall() {
+#
+# php_install - run this once on new machine then switch_php v.v should be sufficient
+#
+function install_php() {
   echo "start:  ${FUNCNAME[0]}"
-  php_uninstall
+  # `2021-01-28 BigSur 11.1`
+  # https://getgrav.org/blog/macos-catalina-apache-multiple-php-versions
+  # https://github.com/shivammathur/homebrew-php
+  # https://github.com/shivammathur/homebrew-extensions
+  export VALET_HOME_PATH="${HOME}/.config/valet"
 
-  [ -e $HOME/.composer/composer.json ] && composer global remove laravel/valet || echo 'valet not installed via composer global'
-  [ -e $HOME/.composer/global/laravel/valet/composer.json ] && cgr remove laravel/valet || echo 'valet not installed with cgr'
+  brew untap -q bgdevlab/php-ext &>/dev/null             # remove conflicting tap
+  brew untap -q bgdevlab/homebrew-deprecated &>/dev/null # remove conflicting tap
 
-  for formula in dnsmasq nginx; do
-      brew services stop $formula || sudo brew services stop $formula
-      brew uninstall --force --ignore-dependencies "$formula" || sudo rm -rf /usr/local/Cellar/$formula
-  done
+  # prepare for install
+  # TEMP DISABLE - brew reinstall -q zlib libmemcached openldap libiconv jq pkg-config openssl icu4c | egrep '🍺|=>'
+  # Valet and our ValetPhpFpm.php class now handle 'shivammathur/core', 'shivammathur/extensions' and PECL installations.
 
-  type -p valet &>/dev/null && valet uninstall --force --no-interaction &>/dev/null
+  install_composer_global $COMPOSER_DEPS_INSTALL
 
-  # force tidyup of empty brew formula directories
-  find /usr/local/Cellar -type d -empty -maxdepth 1 -exec rm -rf {} \;
+  # Next, install via valet via switch_php
+  # Php installation should be handled by 'valet use' and 'valet install' command since laravel/valet:^2.15
+  switch_php 7.0
 
-  [ -e  ~/.valet ] && sudo rm -r ~/.valet
+  brew install -q openssl | egrep '🍺|=>' # pecl required refresh of certificates
 
-  rm -rf /usr/local/etc/php/* /private/tmp/pear/* /usr/local/lib/php/* /usr/local/share/php* /usr/local/share/pear*
   sudo rm -rf /private/tmp/pear/ &>/dev/null
-  brew cleanup
 
-  # todo - consider tidying /Library/LaunchDaemons/homebrew.mxcl*.plist
-  # todo - consider tidying ~/Library/LaunchAgents/homebrew.mxcl*.plist
+  # macos valet and php switcher (not sure of conflicts with switch-php, if any)
+  brew tap nicoverbruggen/homebrew-cask | egrep '🍺|=>'
+  brew install --cask phpmon
 
-  echo "recommend re-installing php versions"
+  imagick_test /private/tmp/imagick_test.php${phpVer}.png && echo "imagick correctly installed - see /private/tmp/imagick_test.php${phpVer}.png" || echo 'imagick issue exists'
+
   echo "finish: ${FUNCNAME[0]}"
 }
 
-function valet_install() {
-    echo "start:  ${FUNCNAME[0]}"
-    # for valet we need to be using php7.0 first on a new box!
-    switch-php 7.0
-    cgr laravel/valet
-    valet install --no-interaction -vvv
-    valet trust
-    brew services list
-    echo "finish: ${FUNCNAME[0]}"
-}
+function cleanup_valet_phpfpm() {
+  echo " 🚕 valet php-fpm - brew services cleanup"
+  phpversion=$1 # in php@7.1 format
+  # look for 2 or more php-fpm, favour the one running as root (as valet runs as root).
 
-function php_install() {
-    echo "start:  ${FUNCNAME[0]}"
-    # `2021-01-28 BigSur 11.1`
-    # https://getgrav.org/blog/macos-catalina-apache-multiple-php-versions
-    # https://github.com/shivammathur/homebrew-php
-    # https://github.com/shivammathur/homebrew-extensions
+  # valet runs php-fpm as root checks
+  launchdaemon="/Library/LaunchDaemons/homebrew.mxcl.${phpversion}.plist"
+  sudo launchctl list homebrew.mxcl.${phpversion} && echo "👍 valet runs php-fpm as root - check SUCCESS " || echo "👎 valet runs php-fpm as root - check FAILED"
+  [ -e "$launchdaemon" ] && true || echo "👎 cannot find launchd control file for (system) php-fpm $launchdaemon"
 
-    brew untap -q bgdevlab/php-ext &>/dev/null # remove conflicting tap
-    brew untap -q bgdevlab/homebrew-deprecated &>/dev/null # remove conflicting tap
+  # report on any user specific valet checks
+  launchagent=~/Library/LaunchAgents/homebrew.mxcl.${phpversion}.plist
+  launchctl list homebrew.mxcl.${phpversion} && echo "👎 valet runs php-fpm as root - you have a (user) specific LaunchAgent " || true
+  [ -e $launchagent ] && {
+    echo "👎 found launchd control file for (user)  php-fpm $launchagent"
+    cp $launchagent ~/.${launchagent}.backup &>/dev/null && echo -e "\narchived php-fpm (user) specific launchagent to ~/.${launchagent}.backup\n"
+  } || true
 
-    # On the first install we need to be based on php70 for composer global installs
-    brew tap shivammathur/php
-    brew tap shivammathur/extensions
-
-    # prepare for install
-    brew reinstall zlib libmemcached openldap libiconv jq pkg-config openssl icu4c
-
-    # install the latest switch-php
-    type -p nvm &>/dev/null && nvm use default && npm install --global https://github.com/bgdevlab/switch-php#bgdevlab
-    type -p nvm &>/dev/null && nvm use stable && npm install --global https://github.com/bgdevlab/switch-php#bgdevlab
-
-    # ensure composer packages are ready
-    type -p composer &>/dev/null || brew install composer
-
-    # plugins are an issue in Composer v2 - prestissimo likely not needed due to perf improvements
-    composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
-    brew reinstall openssl # pecl required refresh of certificates
-
-    for phpVer in 7.0 7.2 7.4 8.0; do
-      echo -e "\n=========== install php-$phpVer ============\n";
-      brew install shivammathur/php/php@$phpVer;
-      brew link --overwrite --force php@$phpVer;
-
-      brew install shivammathur/extensions/imagick@$phpVer;
-      brew install shivammathur/extensions/imap@$phpVer;
-
-      rm -f /usr/local/etc/php/${phpVer}/conf.d/{redis,apcu,memcached}.ini &>/dev/null
-
-      for PHPEXT in redis apcu memcached; do
-        printf "\n" | pecl install $PHPEXT | egrep '^Installing|completed|downloading|fail|already'
-        [ "$(php -m | egrep -e "^$PHPEXT" | wc -l)" -eq 1 ] && \
-          echo "module $PHPEXT loaded" || \
-          echo -e "[$PHPEXT]\nextension=\"$(find $(php-config --extension-dir) -name *$PHPEXT.so)\"" > /usr/local/etc/php/${phpVer}/conf.d/$PHPEXT.ini
-      done
-
-      [ "$(php -m | egrep -e '^apcu|^redis|^memcache' | wc -l)" -eq 3 ] && echo 'php modules installed' || echo 'php modules missing'
-      imagick_test /private/tmp/imagick_test.php${phpVer}.png && echo "imagick correctly installed - see /private/tmp/imagick_test.php${phpVer}.png" || echo 'imagick issue exists'
-    done
-
-    sudo rm -rf /private/tmp/pear/ &>/dev/null
-    echo "finish: ${FUNCNAME[0]}"
-}
-
-
-function valet_help() {
-
-cat << 'HELP' > /dev/stdout
-NGINX
-=====
-tail -n 100 -f $HOME/.config/valet/Log/nginx-error.log
-
-PHP-FPM
-=======
-tail -n 100 -f /usr/local/var/log/php-fpm.log
-HELP
+  # remove user specific php-fpm ONLY if system launchdaemon of same name-version exists ( e.g. can't have two php-fpm@7.0 running )
+  sudo launchctl list homebrew.mxcl.${phpversion} &>/dev/null && {
+    launchctl list homebrew.mxcl.${phpversion} &>/dev/null && launchctl remove homebrew.mxcl.${phpversion} && echo "👍 removed (user) specific launchagent" || false
+  } || true
 
 }
 
+#
+#
+#
+function install_composer_global() {
+  type -p composer &>/dev/null || require_composer
+
+  while [ $# -gt 0 ]; do
+    reqrev="$1"
+    shift
+    local requirement=$(echo "$reqver" | cut -d: -f1)
+    local version=$(echo "$reqver" | cut -d: -f2)
+    [ "${requirement}" = "${version}" ] && version='' || version=":$version" # fix version info
+
+    echo -e "Composer dependency install/update : $reqrev"
+    if [[ "${USE_CGR}" -eq 1 ]]; then
+      cgr update "${requirement}" &>/dev/null || cgr "${requirement}${version}"
+    else
+      composer global show "${requirement}" &>/dev/null && {
+        composer global require -q "${requirement}${version}"
+      } || {
+        composer global update -q "${requirement}"
+      }
+    fi
+
+  done
+
+  #
+  #  # php 7.2+ only - above script lets it silently fail if not compatible.
+  #  (($(echo "$(php_version) >= 7.2" | bc -l))) && {
+  #    composer global show tightenco/takeout || composer global require tightenco/takeout
+  #  }
+
+}
+
+#
+#   hirak/prestissimo deployer/deployer laravel/valet laravel/installer consolidation/cgr
+function cleanup_composer_global() {
+
+  backup_valet_config
+
+  composer -V &>/dev/null || require_composer # we need composer to remove the packages passed to the function
+
+  while [ $# -gt 0 ]; do
+    reqrev="$1"
+    shift
+    local requirement=$(echo "$reqver" | cut -d: -f1)
+    local version=$(echo "$reqver" | cut -d: -f2)                            # we'll disregard this
+    [ "${requirement}" = "${version}" ] && version='' || version=":$version" # remove : if empty version info
+
+    echo -e "Composer dependency remove  : $reqrev"
+    if [[ "${USE_CGR}" -eq 1 ]]; then
+      composer global show -q consolidation/cgr &>/dev/null || composer global require consolidation/cgr -vvv
+      cgr remove "${requirement}" &>/dev/null || true
+    else
+      composer global remove "${requirement}" &>/dev/null || true
+    fi
+  done
+
+}
+
+function uninstall_composer_global() {
+  cleanup_composer_global $@
+  find $HOME -type d -name '.composer' -maxdepth 1 -exec /bin/rm -rf {} \;
+  rm -f $HOME/bin/composer &>/dev/null
+  echo -e "Composer binary removed"
+}
+
+function update_composer_global() {
+  # echo "🎼 Composer Global Update"
+  composer global update -q 2>/dev/null || true
+}

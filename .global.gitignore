@@ -30,7 +30,7 @@ $RECYCLE.BIN/
 *~
 
 # Php - Composer
-vendor/
+# vendor/ # not this as resources/views/vendor is published to and should be under version control
 
 # General
 log/
