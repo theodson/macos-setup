@@ -14,8 +14,8 @@ export VALET_HOME_PATH="${HOME}/.config/valet"
 echo $PATH | grep $COMPOSER_HOME &>/dev/null && true || export PATH="$PATH:$COMPOSER_HOME/vendor/bin" # add path if missing
 
 #
-COMPOSER_DEPS_INSTALL="${COMPOSER_DEPS_INSTALL:-consolidation/cgr laravel/installer tightenco/takeout laravel/valet:^2.15}"
-COMPOSER_DEPS_UNINSTALL="${COMPOSER_DEPS_UNINSTALL:-hirak/prestissimo deployer/deployer $COMPOSER_DEPS_INSTALL}"
+export COMPOSER_DEPS_INSTALL="${COMPOSER_DEPS_INSTALL:-consolidation/cgr laravel/installer tightenco/takeout laravel/valet:^2.15}"
+export COMPOSER_DEPS_UNINSTALL="${COMPOSER_DEPS_UNINSTALL:-hirak/prestissimo deployer/deployer $COMPOSER_DEPS_INSTALL}"
 
 # conveniences
 alias easytimenow='date +%Y%m%d_%H%M_%s'
