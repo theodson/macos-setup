@@ -58,7 +58,7 @@ sudo chown -R $(whoami) /usr/local/sbin
 sudo mkdir -p /usr/local/var/homebrew/linked
 sudo chown -R $(whoami) /usr/local/var/homebrew/linked
 
-brew install httpie wget htop bash-completion gettext tmux
+brew install httpie wget htop bash-completion gettext tmux coreutils
 ```
 
 ### xcode
