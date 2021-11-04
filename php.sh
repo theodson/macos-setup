@@ -31,6 +31,7 @@ alias sphp80='switch_php 8.0'
 
 # Laravel
 alias artisan='php artisan'
+alias art='php artisan'
 alias tinker='php artisan tinker'
 alias sail='bash vendor/bin/sail'
 
@@ -341,6 +342,12 @@ function switch_php() {
     echo "function ${FUNCNAME}(php_version) - required use n.n style"
     return 1
   }
+
+  #
+  # TEMP DISABLE - brew reinstall -q zlib libmemcached openldap libiconv jq pkg-config openssl icu4c | egrep '🍺|=>'
+  # when adding new PECL 'mongodb' sphp73 failed, fix was to run  "brew install openldap libiconv"
+  brew reinstall -q zlib libmemcached openldap libiconv jq pkg-config openssl icu4c | egrep '🍺|=>'
+
   # First, for our version of php in use prior to switching install valet and our customisations.
   require_valet
   install_valet_overrides
@@ -390,6 +397,7 @@ function install_php() {
 
   # prepare for install
   # TEMP DISABLE - brew reinstall -q zlib libmemcached openldap libiconv jq pkg-config openssl icu4c | egrep '🍺|=>'
+  # when adding new PECL 'mongodb' sphp73 failed, fix was to run  "brew install openldap libiconv"
   # Valet and our ValetPhpFpm.php class now handle 'shivammathur/core', 'shivammathur/extensions' and PECL installations.
 
   install_composer_global $COMPOSER_DEPS_INSTALL
