@@ -177,7 +177,7 @@ function ssh_prepare_keyexchange() {
 
 # macOs - check for expected brew installs
 function brew_check_installation() {
-    for formula in httpie wget gettext htop bash-completion zlib jq pkg-config tree tmux
+    for formula in httpie wget gettext htop bash-completion zlib jq pkg-config tree tmux coreutils
     do
         if [ "" = "`brew ls --versions $forumla`" ]; then
             echo "install brew install $forumla"
