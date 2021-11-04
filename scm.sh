@@ -20,6 +20,10 @@ git config --global alias.credentials.helper "config --get-all --show-origin cre
 git config --global alias.credentials.local "config --show-origin --local --get-regexp user.*"
 git config --global alias.credentials.global "config --show-origin --global --get-regexp user.*"
 
+# working with submodules - https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407
+git config --global status.submoduleSummary true
+git config --global diff.submodule log
+
 # debug git
 alias git_debug="GIT_TRACE=true \
 GIT_CURL_VERBOSE=true \
@@ -97,4 +101,15 @@ function git_tag_history() {
     git log ${1}...${2} --date=format:'%Y %h %d' --format="  - %s
     %an - %cd
 "
+}
+
+function git_files_largest() {
+    # https://gist.github.com/nk9/b150542ef72abc7974cb#gistcomment-3715010
+    # requires 'brew install coreutils'
+    git rev-list --objects --all | \
+    git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)' | \
+    sed -n 's/^blob //p' | \
+    sort --numeric-sort --key=2 | \
+    cut -c 1-12,41- | \
+    $(command -v gnumfmt || echo numfmt) --field=2 --to=iec-i --suffix=B --padding=7 --round=nearest
 }
