@@ -32,6 +32,7 @@ class ValetPhpFpm extends PhpFpm
     var $brewExtensions = [
         'imagick' => 'shivammathur/extensions/imagick',
         'imap' => 'shivammathur/extensions/imap',
+        'xdebug' => 'shivammathur/extensions/xdebug',
     ];
 
     /**

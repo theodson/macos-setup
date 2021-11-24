@@ -8,6 +8,9 @@ alias git_tree='git log --branches --remotes --tags --graph --pretty=format:"%Cr
 alias git_local_only_branches='git branch -vv | cut -c 3- | awk '"'"'$3 !~/\[/ { print $1 }'"'"'| sort -f' # Show Local Only Branches (those that dont exist in origin/remote)
 alias git_credentials_show='echo -e "\n# git credentials (helper)";git credentials.helper;echo -e "\n# git credentials (global)";git credentials.global;echo -e "\n# git credentials (local)";git credentials.local'
 
+alias git_find_branches_for_hash='git branch -a --contains'
+
+
 # alias nah='git reset --hard; git clean -df' # Gone forever - Reset to last commit and remove untracked files and directories.
 alias nah='try nope - nah is too dangerous'
 
@@ -112,4 +115,13 @@ function git_files_largest() {
     sort --numeric-sort --key=2 | \
     cut -c 1-12,41- | \
     $(command -v gnumfmt || echo numfmt) --field=2 --to=iec-i --suffix=B --padding=7 --round=nearest
+}
+
+function git_find_branches_for_file() {
+    local search=$(printf "**/%s*" $1)
+    echo "looking for $search"
+    # echo $(git log --all -- $(printf "**/%s*" $1) | grep '^commit ')
+    for hsh in $(git log --all -- $search | grep '^commit ' | awk '{print $2}'); do 
+        git branch -a --contains $hsh; 
+    done | sort | uniq
 }

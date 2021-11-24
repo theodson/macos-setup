@@ -35,6 +35,11 @@ alias art='php artisan'
 alias tinker='php artisan tinker'
 alias sail='bash vendor/bin/sail'
 
+# xDebug
+alias xdebug_disable='xdbgfile=$(php -m | grep Xdebug -q && php --ini | grep xdebug) && [ -n "$xdbgfile" ] && mv $xdbgfile "${xdbgfile}"_disabled || echo "xdebug is not enabled"'
+alias xdebug_restore='incpath=$(php --ini | grep "Scan for additional .ini files" | cut -d: -f2 | xargs) && [ -n "$incpath" ] && xdbgfile=$(ls "${incpath}/"xdebug*disabled) && [ -n "$xdbgfile}" ] && mv $xdbgfile "${incpath}/xdebug.ini" || echo "cannot determine php ini include path"'
+
+
 # PHPDeployer - https://deployer.org
 alias dep='vendor/bin/dep'                    # no global install - (composer 2 issue) - use project's vendor install.
 alias prov='APP_ENV=deployer dep -f=prov.php' # custom deployer command for provisioning

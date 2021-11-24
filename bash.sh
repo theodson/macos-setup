@@ -188,3 +188,7 @@ function brew_check_installation() {
         fi
     done
 }
+
+killport () { 
+    [ $# -eq 1 ] && kill $(lsof -t -i4TCP:$1) && echo 'done'
+}
