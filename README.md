@@ -34,7 +34,7 @@ mv ~/.bash_profile ~/.bash_profile.old
 
 # use new templates as starting point
 cp ~/.bash/templates/adhoc.sh ~/.bash/adhoc.sh
-cp ~/.bash/templates/bash_profile ~/.bash_profile
+cp ~/.bash/templates/.bash_profile ~/.bash_profile
 
 ```
 
