@@ -1,8 +1,10 @@
 # macos-setup
 
+> ⏰ - NO LONGER MAINTAINED - 
+
 ### Last updated `2022-01` for `12.1` Monterey
 
-Moving setup to DotFile https://github.com/theodson/dotfiles
+Moving setup to _dotfiles_ https://github.com/theodson/dotfiles
 
 ### Last updated `2021-05` for BigSur
 
