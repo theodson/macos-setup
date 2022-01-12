@@ -1,6 +1,10 @@
 # macos-setup
 
-###### Last updated `2021-05` for BigSur
+### Last updated `2022-01` for `12.1` Monterey
+
+Moving setup to DotFile https://github.com/theodson/dotfiles
+
+### Last updated `2021-05` for BigSur
 
 > **Note**: Ensure macOS is on at least `11.3`
 
